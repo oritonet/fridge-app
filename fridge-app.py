@@ -72,6 +72,33 @@ def display_items():
 if "fridge_items" not in st.session_state:
     st.session_state.fridge_items = load_data()
 
+st.markdown("""
+    <style>
+    .item-row {
+        display: flex;
+        align-items: center;
+        gap: 6px; /* 間隔を狭く */
+        margin-bottom: 6px;
+        flex-wrap: nowrap;
+    }
+    .item-img {
+        width: 35px;
+        height: 35px;
+        object-fit: contain;
+    }
+    .item-label {
+        font-size: 16px;
+        white-space: nowrap;
+    }
+    .stButton > button {
+        padding: 2px 6px;
+        font-size: 14px;
+        height: auto;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+
 # タイトル
 st.title("🧊 冷蔵庫在庫管理アプリ")
 
