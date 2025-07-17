@@ -102,7 +102,7 @@ if add_col2.button("追加"):
         st.session_state.fridge_items[name] = {"count": 1, "image": image_file}
         save_data(st.session_state.fridge_items)
         st.success(f"{name} を追加しました")
-        st.experimental_rerun()
+        st.rerun()
 
 st.markdown("---")
 if st.button("🍳 おすすめレシピを表示"):
