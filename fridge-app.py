@@ -2,6 +2,7 @@ import streamlit as st
 import json
 import os
 from PIL import Image
+import base64
 
 # 定数
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -27,60 +28,57 @@ def save_data(data):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-# レシピ提案
-def suggest_recipe(data):
-    ingredients = data.keys()
-    if "トマト" in ingredients and "卵" in ingredients:
-        return "🍳 トマトオムレツ を作りましょう！"
-    elif "牛乳" in ingredients and "卵" in ingredients:
-        return "🍮 プリンはいかがですか？"
-    elif "牛乳" in ingredients:
-        return "🥣 ミルクスープをおすすめ！"
-    else:
-        return "🥲 材料が足りません..."
-
-# セッション状態初期化
-if "fridge_items" not in st.session_state:
-    st.session_state.fridge_items = load_data()
-
-st.title("🧊 冷蔵庫在庫管理アプリ")
+# base64で画像をエンコード
+def get_image_base64(image_path):
+    with open(image_path, "rb") as f:
+        return base64.b64encode(f.read()).decode()
 
 # アイテム表示関数
 def display_items():
     for item, info in st.session_state.fridge_items.items():
-        cols = st.columns([1, 4, 1, 1, 1])  # アイコン、名前＋数量、＋、－、削除
-
-        # アイコン画像
         image_path = os.path.join(IMAGE_DIR, info["image"])
-        try:
-            img = Image.open(image_path).resize((40, 40))  # 小さめに調整
-            cols[0].image(img)
-        except:
-            cols[0].text("画像なし")
+        if os.path.exists(image_path):
+            image_base64 = get_image_base64(image_path)
+            image_html = f'<img src="data:image/png;base64,{image_base64}" width="50">'
+        else:
+            image_html = "画像なし"
 
-        # 名前と数量
-        cols[1].markdown(f"**{item}：{info['count']}個**")
+        # 横並び表示：カスタムHTML + Streamlitボタン
+        st.markdown(f"""
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                {image_html}
+                <strong>{item}：{info["count"]}個</strong>
+            </div>
+        """, unsafe_allow_html=True)
 
-        # ＋ボタン
-        if cols[2].button("＋", key=f"add_{item}"):
-            st.session_state.fridge_items[item]["count"] += 1
-            save_data(st.session_state.fridge_items)
-            st.rerun()
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            if st.button("＋", key=f"add_{item}"):
+                st.session_state.fridge_items[item]["count"] += 1
+                save_data(st.session_state.fridge_items)
+                st.rerun()
+        with col2:
+            if st.button("－", key=f"sub_{item}"):
+                st.session_state.fridge_items[item]["count"] = max(0, st.session_state.fridge_items[item]["count"] - 1)
+                save_data(st.session_state.fridge_items)
+                st.rerun()
+        with col3:
+            if st.button("🗑", key=f"del_{item}"):
+                del st.session_state.fridge_items[item]
+                save_data(st.session_state.fridge_items)
+                st.rerun()
 
-        # －ボタン
-        if cols[3].button("－", key=f"sub_{item}"):
-            st.session_state.fridge_items[item]["count"] = max(0, st.session_state.fridge_items[item]["count"] - 1)
-            save_data(st.session_state.fridge_items)
-            st.rerun()
+# セッション初期化
+if "fridge_items" not in st.session_state:
+    st.session_state.fridge_items = load_data()
 
-        # 削除ボタン
-        if cols[4].button("🗑", key=f"del_{item}"):
-            del st.session_state.fridge_items[item]
-            save_data(st.session_state.fridge_items)
-            st.rerun()
+# タイトル
+st.title("🧊 冷蔵庫在庫管理アプリ")
 
+# 表示
 display_items()
 
+# 新規追加セクション
 st.markdown("---")
 st.subheader("🥕 食材を追加")
 
@@ -97,13 +95,25 @@ if add_col2.button("追加"):
             "トマト": "tomato.png",
             "卵": "egg.png",
             "牛乳": "milk.png"
-        }.get(name, "default.png")  # imagesフォルダにdefault.pngを用意しておくと良いです
+        }.get(name, "default.png")
 
         st.session_state.fridge_items[name] = {"count": 1, "image": image_file}
         save_data(st.session_state.fridge_items)
         st.success(f"{name} を追加しました")
         st.rerun()
 
+# レシピ表示
 st.markdown("---")
+def suggest_recipe(data):
+    ingredients = data.keys()
+    if "トマト" in ingredients and "卵" in ingredients:
+        return "🍳 トマトオムレツ を作りましょう！"
+    elif "牛乳" in ingredients and "卵" in ingredients:
+        return "🍮 プリンはいかが？"
+    elif "牛乳" in ingredients:
+        return "🥣 ミルクスープをおすすめ！"
+    else:
+        return "🥲 材料が足りません..."
+
 if st.button("🍳 おすすめレシピを表示"):
     st.info(suggest_recipe(st.session_state.fridge_items))
