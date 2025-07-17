@@ -10,7 +10,7 @@ IMAGE_DIR = os.path.join(BASE_DIR, "images")
 
 # 初期データ
 default_items = {
-    "トマトあ": {"count": 2, "image": "tomato.png"},
+    "トマト": {"count": 2, "image": "tomato.png"},
     "卵": {"count": 6, "image": "egg.png"},
     "牛乳": {"count": 1, "image": "milk.png"}
 }
@@ -33,7 +33,7 @@ def suggest_recipe(data):
     if "トマト" in ingredients and "卵" in ingredients:
         return "🍳 トマトオムレツ を作りましょう！"
     elif "牛乳" in ingredients and "卵" in ingredients:
-        return "🍮 プリンはいかが？"
+        return "🍮 プリンはいかがですか？"
     elif "牛乳" in ingredients:
         return "🥣 ミルクスープをおすすめ！"
     else:
