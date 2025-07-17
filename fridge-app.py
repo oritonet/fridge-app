@@ -65,19 +65,19 @@ def display_items():
         if cols[2].button("＋", key=f"add_{item}"):
             st.session_state.fridge_items[item]["count"] += 1
             save_data(st.session_state.fridge_items)
-            st.experimental_rerun()
+            st.rerun()
 
         # －ボタン
         if cols[3].button("－", key=f"sub_{item}"):
             st.session_state.fridge_items[item]["count"] = max(0, st.session_state.fridge_items[item]["count"] - 1)
             save_data(st.session_state.fridge_items)
-            st.experimental_rerun()
+            st.rerun()
 
         # 削除ボタン
         if cols[4].button("🗑", key=f"del_{item}"):
             del st.session_state.fridge_items[item]
             save_data(st.session_state.fridge_items)
-            st.experimental_rerun()
+            st.rerun()
 
 display_items()
 
