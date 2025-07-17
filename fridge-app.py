@@ -10,7 +10,7 @@ IMAGE_DIR = os.path.join(BASE_DIR, "images")
 
 # 初期データ
 default_items = {
-    "トマト": {"count": 2, "image": "tomato.png"},
+    "トマトあ": {"count": 2, "image": "tomato.png"},
     "卵": {"count": 6, "image": "egg.png"},
     "牛乳": {"count": 1, "image": "milk.png"}
 }
