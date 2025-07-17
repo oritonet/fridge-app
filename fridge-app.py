@@ -48,19 +48,19 @@ st.title("🧊 冷蔵庫在庫管理アプリ")
 # アイテム表示関数
 def display_items():
     for item, info in st.session_state.fridge_items.items():
-        cols = st.columns([1, 3, 2, 2, 2])
-        
+        cols = st.columns([1, 3, 1, 1, 1])  # アイコン、名前＋数量、＋、－、削除
+
         # アイコン画像
         image_path = os.path.join(IMAGE_DIR, info["image"])
         try:
-            img = Image.open(image_path).resize((50, 50))
+            img = Image.open(image_path).resize((40, 40))  # 小さめに調整
             cols[0].image(img)
         except:
             cols[0].text("画像なし")
-        
+
         # 名前と数量
         cols[1].markdown(f"**{item}：{info['count']}個**")
-        
+
         # ＋ボタン
         if cols[2].button("＋", key=f"add_{item}"):
             st.session_state.fridge_items[item]["count"] += 1
