@@ -48,7 +48,7 @@ st.title("🧊 冷蔵庫在庫管理アプリ")
 # アイテム表示関数
 def display_items():
     for item, info in st.session_state.fridge_items.items():
-        cols = st.columns([1, 3, 1, 1, 1])  # アイコン、名前＋数量、＋、－、削除
+        cols = st.columns([1, 4, 1, 1, 1])  # アイコン、名前＋数量、＋、－、削除
 
         # アイコン画像
         image_path = os.path.join(IMAGE_DIR, info["image"])
