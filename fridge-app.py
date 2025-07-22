@@ -146,14 +146,14 @@ if st.button("🍳 おすすめレシピを表示"):
     st.info(suggest_recipe(st.session_state.fridge_items))
 
 # 楽天レシピAPIキー（楽天デベロッパーズで取得したものをここに貼る）
-RAKUTEN_APP_ID = "YOUR_RAKUTEN_APP_ID"
+RAKUTEN_APP_ID = "1077657241734895268"
 
 def get_rakuten_recipes(ingredients):
     # 材料名をカンマ区切りの文字列に変換
     material_str = ",".join(ingredients)
     url = "https://app.rakuten.co.jp/services/api/Recipe/RecipeMaterial/20170426"
     params = {
-        "applicationId": 1077657241734895268,
+        "applicationId": ,
         "format": "json",
         "material": material_str
     }
