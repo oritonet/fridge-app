@@ -153,7 +153,7 @@ def get_rakuten_recipes(ingredients):
     material_str = ",".join(ingredients)
     url = "https://app.rakuten.co.jp/services/api/Recipe/RecipeMaterial/20170426"
     params = {
-        "applicationId": ,
+        "applicationId": RAKUTEN_APP_ID,
         "format": "json",
         "material": material_str
     }
