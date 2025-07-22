@@ -3,6 +3,7 @@ import json
 import os
 from PIL import Image
 import base64
+import requests
 
 # 定数
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
