@@ -1,4 +1,4 @@
-import streamlit as st
+うimport streamlit as st
 import json
 import os
 from PIL import Image
@@ -166,3 +166,15 @@ def get_rakuten_recipes(ingredients):
     except Exception as e:
         st.error(f"楽天レシピAPIの取得に失敗しました: {e}")
         return []
+
+st.markdown("---")
+st.subheader("📝 楽天レシピから提案")
+
+if st.button("楽天レシピで検索"):
+    ingredients = list(st.session_state.fridge_items.keys())
+    recipes = get_rakuten_recipes(ingredients)
+    if recipes:
+        for recipe in recipes[:5]:  # 上位5件だけ表示
+            st.markdown(f"**{recipe['recipeTitle']}**  \n[レシピを見る]({recipe['recipeUrl']})")
+    else:
+        st.info("該当するレシピが見つかりませんでした。")
