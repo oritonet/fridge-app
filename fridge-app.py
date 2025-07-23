@@ -146,36 +146,3 @@ def suggest_recipe(data):
 if st.button("🍳 おすすめレシピを表示"):
     st.info(suggest_recipe(st.session_state.fridge_items))
 
-# 楽天レシピAPIキー（楽天デベロッパーズで取得したものをここに貼る）
-RAKUTEN_APP_ID = "1077657241734895268"
-
-def get_rakuten_recipes(ingredients):
-    # 材料名をカンマ区切りの文字列に変換
-    material_str = ",".join(ingredients)
-    url = "https://app.rakuten.co.jp/services/api/Recipe/RecipeMaterial/20170426"
-    params = {
-        "applicationId": RAKUTEN_APP_ID,
-        "format": "json",
-        "material": material_str
-    }
-    try:
-        res = requests.get(url, params=params)
-        res.raise_for_status()
-        data = res.json()
-        recipes = data.get("result", [])
-        return recipes
-    except Exception as e:
-        st.error(f"楽天レシピAPIの取得に失敗しました: {e}")
-        return []
-
-st.markdown("---")
-st.subheader("📝 楽天レシピから提案")
-
-if st.button("楽天レシピで検索"):
-    ingredients = list(st.session_state.fridge_items.keys())
-    recipes = get_rakuten_recipes(ingredients)
-    if recipes:
-        for recipe in recipes[:5]:  # 上位5件だけ表示
-            st.markdown(f"**{recipe['recipeTitle']}**  \n[レシピを見る]({recipe['recipeUrl']})")
-    else:
-        st.info("該当するレシピが見つかりませんでした。")
