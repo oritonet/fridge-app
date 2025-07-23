@@ -151,6 +151,7 @@ RAKUTEN_APP_ID = "1077657241734895268"
 def get_rakuten_recipes(ingredients):
     # 材料を最大5個、全角カンマ区切りで指定
     material_str = "、".join(list(ingredients)[:5])
+st.write(f"楽天レシピAPIに送信する材料パラメータ: {material_str}")
     url = "https://app.rakuten.co.jp/services/api/Recipe/RecipeMaterial/20170426"
     params = {
         "applicationId": RAKUTEN_APP_ID,
