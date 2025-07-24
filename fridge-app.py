@@ -79,12 +79,12 @@ st.markdown("""
         display: flex;
         align-items: center;
         gap: 2px; /* 間隔を狭く */
-        margin-bottom: 6px;
+        margin-bottom: 4px;
         flex-wrap: nowrap;
     }
     .item-img {
-        width: 10px;
-        height: 10px;
+        width: 5px;
+        height: 5px;
         object-fit: contain;
     }
     .item-label {
@@ -92,7 +92,7 @@ st.markdown("""
         white-space: nowrap;
     }
     .stButton > button {
-        padding: 2px 4px;
+        padding: 2px 2px;
         font-size: 2px;
         height: auto;
     }
