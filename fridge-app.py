@@ -94,7 +94,7 @@ st.markdown("""
     .stButton > button {
         padding: 2px 2px;
         font-size: 2px;
-        height: auto;
+        height: 2px;
     }
     </style>
 """, unsafe_allow_html=True)
