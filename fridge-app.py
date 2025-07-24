@@ -103,7 +103,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # タイトル
-st.markdown("<h2 style='font-size:22px;'>🧊 冷蔵庫在庫管理アプリ</h2>", unsafe_allow_html=True)
+st.markdown("<h2 style='font-size:15px;'>🧊 冷蔵庫在庫管理アプリ</h2>", unsafe_allow_html=True)
 
 # 表示
 display_items()
