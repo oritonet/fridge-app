@@ -92,8 +92,8 @@ st.markdown("""
         white-space: nowrap;
     }
     .stButton > button {
-        padding: 2px 6px;
-        font-size: 10px;
+        padding: 2px 4px;
+        font-size: 5px;
         height: auto;
     }
     </style>
