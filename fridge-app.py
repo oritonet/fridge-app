@@ -83,8 +83,8 @@ st.markdown("""
         flex-wrap: nowrap;
     }
     .item-img {
-        width: 5px;
-        height: 5px;
+        width: 2px;
+        height: 2px;
         object-fit: contain;
     }
     .item-label {
