@@ -36,39 +36,7 @@ def get_image_base64(image_path):
 
 
 # アイテム表示関数
-def display_items():
-    for item, info in st.session_state.fridge_items.items():
-        image_path = os.path.join(IMAGE_DIR, info["image"])
-        if os.path.exists(image_path):
-            image_base64 = get_image_base64(image_path)
-            image_html = f'<img src="data:image/png;base64,{image_base64}" width="24" style="vertical-align:middle;">'
-        else:
-            image_html = "<span style='font-size:10px;'>画像なし</span>"
 
-        # 横並び表示：カスタムHTML + Streamlitボタン
-        st.markdown(f"""
-            <div style="display: flex; align-items: center; gap: 3px; margin-bottom: 3px; min-height:24px;">
-                {image_html}
-                <strong style="font-size:12px;">{item}：{info["count"]}個</strong>
-            </div>
-        """, unsafe_allow_html=True)
-
-        col1, col2, col3 = st.columns([1, 1, 1], gap="small")
-        with col1:
-            if st.button("＋", key=f"add_{item}"):
-                st.session_state.fridge_items[item]["count"] += 1
-                save_data(st.session_state.fridge_items)
-                st.rerun()
-        with col2:
-            if st.button("－", key=f"sub_{item}"):
-                st.session_state.fridge_items[item]["count"] = max(0, st.session_state.fridge_items[item]["count"] - 1)
-                save_data(st.session_state.fridge_items)
-                st.rerun()
-        with col3:
-            if st.button("🗑", key=f"del_{item}"):
-                del st.session_state.fridge_items[item]
-                save_data(st.session_state.fridge_items)
-                st.rerun()
 
 # セッション初期化
 if "fridge_items" not in st.session_state:
