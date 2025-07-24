@@ -94,7 +94,7 @@ st.markdown("""
     }
     .stButton > button {
         padding: 2px 6px !important;
-        font-size: 11px !important;
+        font-size: 2px !important;
         min-width: 24px !important;
         height: 18px !important;
         line-height: 1 !important;
@@ -103,7 +103,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # タイトル
-st.markdown("<h2 style='font-size:15px;'>🧊 冷蔵庫在庫管理アプリ</h2>", unsafe_allow_html=True)
+st.markdown("<h2 style='font-size:20px;'>🧊 冷蔵庫在庫管理アプリ</h2>", unsafe_allow_html=True)
 
 # 表示
 display_items()
