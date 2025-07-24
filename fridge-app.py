@@ -93,7 +93,7 @@ st.markdown("""
     }
     .stButton > button {
         padding: 2px 4px;
-        font-size: 5px;
+        font-size: 2px;
         height: auto;
     }
     </style>
