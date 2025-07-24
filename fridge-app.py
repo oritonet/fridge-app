@@ -34,8 +34,76 @@ def get_image_base64(image_path):
     with open(image_path, "rb") as f:
         return base64.b64encode(f.read()).decode()
 
-# アイテム表示関数
 
+# アイテム表示関数
+def display_items():
+    for item, info in st.session_state.fridge_items.items():
+        image_path = os.path.join(IMAGE_DIR, info["image"])
+        if os.path.exists(image_path):
+            image_base64 = get_image_base64(image_path)
+            image_html = f'<img src="data:image/png;base64,{image_base64}" width="24" style="vertical-align:middle;">'
+        else:
+            image_html = "<span style='font-size:10px;'>画像なし</span>"
+
+        # 横並び表示：カスタムHTML + Streamlitボタン
+        st.markdown(f"""
+            <div style="display: flex; align-items: center; gap: 3px; margin-bottom: 3px; min-height:24px;">
+                {image_html}
+                <strong style="font-size:12px;">{item}：{info["count"]}個</strong>
+            </div>
+        """, unsafe_allow_html=True)
+
+        col1, col2, col3 = st.columns([1, 1, 1], gap="small")
+        with col1:
+            if st.button("＋", key=f"add_{item}"):
+                st.session_state.fridge_items[item]["count"] += 1
+                save_data(st.session_state.fridge_items)
+                st.rerun()
+        with col2:
+            if st.button("－", key=f"sub_{item}"):
+                st.session_state.fridge_items[item]["count"] = max(0, st.session_state.fridge_items[item]["count"] - 1)
+                save_data(st.session_state.fridge_items)
+                st.rerun()
+        with col3:
+            if st.button("🗑", key=f"del_{item}"):
+                del st.session_state.fridge_items[item]
+                save_data(st.session_state.fridge_items)
+                st.rerun()
+
+# セッション初期化
+if "fridge_items" not in st.session_state:
+    st.session_state.fridge_items = load_data()
+
+st.markdown("""
+    <style>
+    .item-row {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        margin-bottom: 2px;
+        flex-wrap: nowrap;
+    }
+    .item-img {
+        width: 18px !important;
+        height: 18px !important;
+        object-fit: contain;
+    }
+    .item-label {
+        font-size: 11px !important;
+        white-space: nowrap;
+    }
+    .stButton > button {
+        padding: 2px 6px !important;
+        font-size: 11px !important;
+        min-width: 24px !important;
+        height: 18px !important;
+        line-height: 1 !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# タイトル
+st.markdown("<h2 style='font-size:22px;'>🧊 冷蔵庫在庫管理アプリ</h2>", unsafe_allow_html=True)
 
 # 表示
 display_items()
