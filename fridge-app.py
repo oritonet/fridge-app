@@ -46,7 +46,7 @@ def display_items():
 
         # 横並び表示：カスタムHTML + Streamlitボタン
         st.markdown(f"""
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+            <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 5px;">
                 {image_html}
                 <strong>{item}：{info["count"]}個</strong>
             </div>
