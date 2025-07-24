@@ -83,17 +83,17 @@ st.markdown("""
         flex-wrap: nowrap;
     }
     .item-img {
-        width: 20px;
-        height: 20px;
+        width: 10px;
+        height: 10px;
         object-fit: contain;
     }
     .item-label {
-        font-size: 10px;
+        font-size: 5px;
         white-space: nowrap;
     }
     .stButton > button {
         padding: 2px 6px;
-        font-size: 14px;
+        font-size: 10px;
         height: auto;
     }
     </style>
