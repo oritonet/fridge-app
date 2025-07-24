@@ -35,73 +35,7 @@ def get_image_base64(image_path):
         return base64.b64encode(f.read()).decode()
 
 # アイテム表示関数
-def display_items():
-    for item, info in st.session_state.fridge_items.items():
-        image_path = os.path.join(IMAGE_DIR, info["image"])
-        if os.path.exists(image_path):
-            image_base64 = get_image_base64(image_path)
-            image_html = f'<img src="data:image/png;base64,{image_base64}" width="50">'
-        else:
-            image_html = "画像なし"
 
-        # 横並び表示：カスタムHTML + Streamlitボタン
-        st.markdown(f"""
-            <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 5px;">
-                {image_html}
-                <strong>{item}：{info["count"]}個</strong>
-            </div>
-        """, unsafe_allow_html=True)
-
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            if st.button("＋", key=f"add_{item}"):
-                st.session_state.fridge_items[item]["count"] += 1
-                save_data(st.session_state.fridge_items)
-                st.rerun()
-        with col2:
-            if st.button("－", key=f"sub_{item}"):
-                st.session_state.fridge_items[item]["count"] = max(0, st.session_state.fridge_items[item]["count"] - 1)
-                save_data(st.session_state.fridge_items)
-                st.rerun()
-        with col3:
-            if st.button("🗑", key=f"del_{item}"):
-                del st.session_state.fridge_items[item]
-                save_data(st.session_state.fridge_items)
-                st.rerun()
-
-# セッション初期化
-if "fridge_items" not in st.session_state:
-    st.session_state.fridge_items = load_data()
-
-st.markdown("""
-    <style>
-    .item-row {
-        display: flex;
-        align-items: center;
-        gap: 2px; /* 間隔を狭く */
-        margin-bottom: 4px;
-        flex-wrap: nowrap;
-    }
-    .item-img {
-        width: 2px;
-        height: 2px;
-        object-fit: contain;
-    }
-    .item-label {
-        font-size: 5px;
-        white-space: nowrap;
-    }
-    .stButton > button {
-        padding: 2px 2px;
-        font-size: 2px;
-        height: 2px;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
-
-# タイトル
-st.title("🧊 冷蔵庫在庫管理アプリ")
 
 # 表示
 display_items()
