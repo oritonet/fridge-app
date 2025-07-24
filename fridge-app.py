@@ -41,7 +41,7 @@ def display_items():
         image_path = os.path.join(IMAGE_DIR, info["image"])
         if os.path.exists(image_path):
             image_base64 = get_image_base64(image_path)
-            image_html = f'<img src="data:image/png;base64,{image_base64}" width="18">'
+            image_html = f'<img src="data:image/png;base64,{image_base64}" width="22">'
         else:
             image_html = "画像なし"
 
