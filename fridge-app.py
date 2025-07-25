@@ -37,42 +37,40 @@ def get_image_base64(image_path):
 
 def display_items():
     for item, info in st.session_state.fridge_items.items():
+        cols = st.columns([1, 4, 1, 1, 1])  # 比率で横並び維持（スマホ対応）
+
         image_path = os.path.join(IMAGE_DIR, info["image"])
-        if os.path.exists(image_path):
-            image_base64 = get_image_base64(image_path)
-            image_html = f'<img src="data:image/png;base64,{image_base64}" style="width:30px;height:auto;">'
-        else:
-            image_html = "画像なし"
+        with cols[0]:
+            if os.path.exists(image_path):
+                st.image(image_path, width=30)
+            else:
+                st.write("画像なし")
 
-        item_id = item.replace(" ", "_")  # ボタンID用に整形
+        with cols[1]:
+            st.markdown(f"<span style='font-size:14px'>{item}：{info['count']}個</span>", unsafe_allow_html=True)
 
-        # HTML + inline CSSで1行横並び
-        st.markdown(f"""
-            <div style="display: flex; align-items: center; justify-content: flex-start; gap: 8px;
-                        margin-bottom: 10px; flex-wrap: nowrap;">
-                {image_html}
-                <div style="font-size: 14px; white-space: nowrap;">{item}：{info["count"]}個</div>
-                <form action="" method="post">
-                    <button name="action" value="add_{item_id}" style="font-size:16px;">＋</button>
-                    <button name="action" value="sub_{item_id}" style="font-size:16px;">－</button>
-                    <button name="action" value="del_{item_id}" style="font-size:16px;">🗑️</button>
-                </form>
-            </div>
-        """, unsafe_allow_html=True)
+        # Form内にボタンを置く（これで1行表示＋動作が安定）
+        with cols[2]:
+            with st.form(key=f"add_form_{item}", clear_on_submit=True):
+                if st.form_submit_button("＋"):
+                    st.session_state.fridge_items[item]["count"] += 1
+                    save_data(st.session_state.fridge_items)
+                    st.rerun()
 
-    # ボタン処理（POSTではセッション維持が必要）
-    action = st.experimental_get_query_params().get("action", [None])[0]
-    if action:
-        for item in list(st.session_state.fridge_items.keys()):
-            item_id = item.replace(" ", "_")
-            if action == f"add_{item_id}":
-                st.session_state.fridge_items[item]["count"] += 1
-            elif action == f"sub_{item_id}":
-                st.session_state.fridge_items[item]["count"] = max(0, st.session_state.fridge_items[item]["count"] - 1)
-            elif action == f"del_{item_id}":
-                del st.session_state.fridge_items[item]
-            save_data(st.session_state.fridge_items)
-            st.experimental_rerun()
+        with cols[3]:
+            with st.form(key=f"sub_form_{item}", clear_on_submit=True):
+                if st.form_submit_button("－"):
+                    st.session_state.fridge_items[item]["count"] = max(0, st.session_state.fridge_items[item]["count"] - 1)
+                    save_data(st.session_state.fridge_items)
+                    st.rerun()
+
+        with cols[4]:
+            with st.form(key=f"del_form_{item}", clear_on_submit=True):
+                if st.form_submit_button("🗑️"):
+                    del st.session_state.fridge_items[item]
+                    save_data(st.session_state.fridge_items)
+                    st.rerun()
+
 
 
 
