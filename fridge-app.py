@@ -44,33 +44,35 @@ def display_items():
         else:
             image_html = "画像なし"
 
-        item_id = item.replace(" ", "_")  # IDとして使えるよう整形
+        item_id = item.replace(" ", "_")
 
-        # 各アイテムに3つのボタン（＋, －, 🗑️）をStreamlit側で設置
+        # 横並びHTML（＋／ー／削除はリンク扱い）
         st.markdown(f"""
-            <div style="display: flex; align-items: center; gap: 8px;
-                        margin-bottom: 10px; flex-wrap: nowrap;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: nowrap;">
                 {image_html}
-                <span style="font-size: 14px; white-space: nowrap;">{item}：{info["count"]}個</span>
+                <div style="font-size: 14px; white-space: nowrap;">{item}：{info["count"]}個</div>
+                <a href="?action=add_{item_id}" style="font-size:16px;text-decoration:none;">＋</a>
+                <a href="?action=sub_{item_id}" style="font-size:16px;text-decoration:none;">－</a>
+                <a href="?action=del_{item_id}" style="font-size:16px;text-decoration:none;">🗑️</a>
             </div>
         """, unsafe_allow_html=True)
 
-        col1, col2, col3 = st.columns([1, 1, 1])
-        with col1:
-            if st.button("＋", key=f"add_{item_id}"):
+    # クエリパラメータから action を取得
+    action = st.query_params.get("action", [None])[0]
+    if action:
+        for item in list(st.session_state.fridge_items.keys()):
+            item_id = item.replace(" ", "_")
+            if action == f"add_{item_id}":
                 st.session_state.fridge_items[item]["count"] += 1
-                save_data(st.session_state.fridge_items)
-                st.rerun()
-        with col2:
-            if st.button("－", key=f"sub_{item_id}"):
+            elif action == f"sub_{item_id}":
                 st.session_state.fridge_items[item]["count"] = max(0, st.session_state.fridge_items[item]["count"] - 1)
-                save_data(st.session_state.fridge_items)
-                st.rerun()
-        with col3:
-            if st.button("🗑️", key=f"del_{item_id}"):
+            elif action == f"del_{item_id}":
                 del st.session_state.fridge_items[item]
-                save_data(st.session_state.fridge_items)
-                st.rerun()
+            save_data(st.session_state.fridge_items)
+            # クエリパラメータを消して再読み込み
+            st.query_params.clear()
+            st.rerun()
+
 
 
 
