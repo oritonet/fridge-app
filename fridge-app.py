@@ -43,30 +43,36 @@ def display_items():
         else:
             image = None
 
-        # 3列に分ける（画像・テキスト・操作ボタン）
-        col1, col2, col3, col4, col5 = st.columns([1, 2, 1, 1, 1])
-        with col1:
-            if image:
-                st.image(image, width=30)
-            else:
-                st.text("画像なし")
-        with col2:
-            st.markdown(f"**{item}：{info['count']}個**")
-        with col3:
-            if st.button("＋", key=f"add_{item}"):
-                st.session_state.fridge_items[item]["count"] += 1
-                save_data(st.session_state.fridge_items)
-                st.rerun()
-        with col4:
-            if st.button("−", key=f"sub_{item}"):
-                st.session_state.fridge_items[item]["count"] = max(0, info["count"] - 1)
-                save_data(st.session_state.fridge_items)
-                st.rerun()
-        with col5:
-            if st.button("🗑️", key=f"del_{item}"):
-                del st.session_state.fridge_items[item]
-                save_data(st.session_state.fridge_items)
-                st.rerun()
+        st.markdown("---")  # 区切り線
+
+        # カード風ボックス
+        with st.container():
+            cols = st.columns([1, 3])
+            with cols[0]:
+                if image:
+                    st.image(image, width=60)
+                else:
+                    st.text("画像なし")
+            with cols[1]:
+                st.markdown(f"### {item}")
+                st.markdown(f"個数: {info['count']}個")
+                btn_cols = st.columns([1,1,1])
+                with btn_cols[0]:
+                    if st.button("＋", key=f"add_{item}"):
+                        st.session_state.fridge_items[item]["count"] += 1
+                        save_data(st.session_state.fridge_items)
+                        st.experimental_rerun()
+                with btn_cols[1]:
+                    if st.button("−", key=f"sub_{item}"):
+                        st.session_state.fridge_items[item]["count"] = max(0, info["count"] - 1)
+                        save_data(st.session_state.fridge_items)
+                        st.experimental_rerun()
+                with btn_cols[2]:
+                    if st.button("🗑️", key=f"del_{item}"):
+                        del st.session_state.fridge_items[item]
+                        save_data(st.session_state.fridge_items)
+                        st.experimental_rerun()
+
 
 
 
