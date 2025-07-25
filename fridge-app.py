@@ -168,7 +168,7 @@ if add_col2.button("追加"):
             st.session_state[f"{prefix}{name}_clicked"] = False
         save_data(st.session_state.fridge_items)
         st.success(f"{name} を追加しました")
-        safe_rerun()
+        st.rerun()
 
 st.markdown("---")
 def suggest_recipe(data):
