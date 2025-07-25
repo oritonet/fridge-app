@@ -37,39 +37,45 @@ def get_image_base64(image_path):
 
 def display_items():
     for item, info in st.session_state.fridge_items.items():
-        cols = st.columns([1, 4, 1, 1, 1])  # 比率で横並び維持（スマホ対応）
+        # 列幅：画像・名前・ボタンエリア
+        col1, col2, col3 = st.columns([1, 4, 4])
 
-        image_path = os.path.join(IMAGE_DIR, info["image"])
-        with cols[0]:
+        # 画像表示
+        with col1:
+            image_path = os.path.join(IMAGE_DIR, info["image"])
             if os.path.exists(image_path):
                 st.image(image_path, width=30)
             else:
                 st.write("画像なし")
 
-        with cols[1]:
+        # アイテム名と個数
+        with col2:
             st.markdown(f"<span style='font-size:14px'>{item}：{info['count']}個</span>", unsafe_allow_html=True)
 
-        # Form内にボタンを置く（これで1行表示＋動作が安定）
-        with cols[2]:
-            with st.form(key=f"add_form_{item}", clear_on_submit=True):
-                if st.form_submit_button("＋"):
+        # ボタン3つを1つのフォーム内に並べて配置
+        with col3:
+            with st.form(key=f"form_{item}", clear_on_submit=True):
+                b1, b2, b3 = st.columns([1, 1, 1])
+                with b1:
+                    add = st.form_submit_button("＋")
+                with b2:
+                    sub = st.form_submit_button("－")
+                with b3:
+                    delete = st.form_submit_button("🗑️")
+
+                if add:
                     st.session_state.fridge_items[item]["count"] += 1
                     save_data(st.session_state.fridge_items)
                     st.rerun()
-
-        with cols[3]:
-            with st.form(key=f"sub_form_{item}", clear_on_submit=True):
-                if st.form_submit_button("－"):
+                elif sub:
                     st.session_state.fridge_items[item]["count"] = max(0, st.session_state.fridge_items[item]["count"] - 1)
                     save_data(st.session_state.fridge_items)
                     st.rerun()
-
-        with cols[4]:
-            with st.form(key=f"del_form_{item}", clear_on_submit=True):
-                if st.form_submit_button("🗑️"):
+                elif delete:
                     del st.session_state.fridge_items[item]
                     save_data(st.session_state.fridge_items)
                     st.rerun()
+
 
 
 
