@@ -4,6 +4,7 @@ import os
 from PIL import Image
 import base64
 import requests
+from io import BytesIO
 
 # 定数
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -34,57 +35,74 @@ def get_image_base64(image_path):
     with open(image_path, "rb") as f:
         return base64.b64encode(f.read()).decode()
 
-
 def display_items():
     for item, info in st.session_state.fridge_items.items():
         image_path = os.path.join(IMAGE_DIR, info["image"])
         if os.path.exists(image_path):
-            image = Image.open(image_path)
+            image_base64 = get_image_base64(image_path)
+            count = info["count"]
+
+            # 画像に個数を中央オーバーレイ表示するHTML
+            html = f"""
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                <div style="position: relative; width: 60px; height: 60px;">
+                    <img src="data:image/png;base64,{image_base64}" 
+                        style="width: 60px; height: 60px; border-radius: 8px; object-fit: contain;" />
+                    <div style="
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        background-color: rgba(0, 0, 0, 0.6);
+                        color: white;
+                        font-weight: bold;
+                        border-radius: 50%;
+                        width: 26px;
+                        height: 26px;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        font-size: 16px;
+                        user-select: none;
+                    ">
+                        {count}
+                    </div>
+                </div>
+                <div style="flex-grow: 1;">
+                    <h3 style="margin: 0 0 8px 0;">{item}</h3>
+                    <div style="display: flex; gap: 6px;">
+                        <button id="btn_add_{item}" style="font-size: 18px; padding: 6px 12px;">＋</button>
+                        <button id="btn_sub_{item}" style="font-size: 18px; padding: 6px 12px;">－</button>
+                        <button id="btn_del_{item}" style="font-size: 18px; padding: 6px 12px;">🗑️</button>
+                    </div>
+                </div>
+            </div>
+            """
+
+            # HTMLを表示（ボタンのクリックはJSで拾えないため無効）
+            st.markdown(html, unsafe_allow_html=True)
+
+            # 代わりにStreamlitのボタンで操作させるため、透明なボタン配置
+            col1, col2, col3 = st.columns([1,1,1])
+            with col1:
+                if st.button("＋", key=f"add_{item}"):
+                    st.session_state.fridge_items[item]["count"] += 1
+                    save_data(st.session_state.fridge_items)
+                    st.experimental_rerun()
+            with col2:
+                if st.button("−", key=f"sub_{item}"):
+                    current_count = st.session_state.fridge_items[item]["count"]
+                    st.session_state.fridge_items[item]["count"] = max(0, current_count - 1)
+                    save_data(st.session_state.fridge_items)
+                    st.experimental_rerun()
+            with col3:
+                if st.button("🗑️", key=f"del_{item}"):
+                    del st.session_state.fridge_items[item]
+                    save_data(st.session_state.fridge_items)
+                    st.experimental_rerun()
+
         else:
-            image = None
-
-        st.markdown("---")  # 区切り線
-
-        with st.container():
-            cols = st.columns([1, 3])
-            with cols[0]:
-                if image:
-                    st.image(image, width=60)
-                else:
-                    st.text("画像なし")
-            with cols[1]:
-                st.markdown(f"### {item}")
-                st.markdown(f"個数: {info['count']}個")
-
-                btn_cols = st.columns([1,1,1])
-                with btn_cols[0]:
-                    if st.button("＋", key=f"add_{item}"):
-                        st.session_state.fridge_items[item]["count"] += 1
-                        save_data(st.session_state.fridge_items)
-                        st.experimental_rerun()
-
-                with btn_cols[1]:
-                    if st.button("−", key=f"sub_{item}"):
-                        current_count = st.session_state.fridge_items[item]["count"]
-                        st.session_state.fridge_items[item]["count"] = max(0, current_count - 1)
-                        save_data(st.session_state.fridge_items)
-                        st.experimental_rerun()
-
-                with btn_cols[2]:
-                    if st.button("🗑️", key=f"del_{item}"):
-                        del st.session_state.fridge_items[item]
-                        save_data(st.session_state.fridge_items)
-                        st.experimental_rerun()
-
-
-
-
-
-
-
-
-
-
+            st.text(f"{item}：画像なし, 個数: {info['count']}")
 
 # セッション初期化
 if "fridge_items" not in st.session_state:
@@ -92,27 +110,11 @@ if "fridge_items" not in st.session_state:
 
 st.markdown("""
     <style>
-    .item-row {
-        display: flex;
-        align-items: center;
-        gap: 2px;
-        margin-bottom: 2px;
-        flex-wrap: nowrap;
-    }
-    .item-img {
-        width: 24px !important;
-        height: 24px !important;
-        object-fit: contain;
-    }
-    .item-label {
-        font-size: 11px !important;
-        white-space: nowrap;
-    }
     .stButton > button {
-        padding: 2px 6px !important;
-        font-size: 2px !important;
-        min-width: 24px !important;
-        height: 18px !important;
+        padding: 6px 12px !important;
+        font-size: 18px !important;
+        min-width: 48px !important;
+        height: 38px !important;
         line-height: 1 !important;
     }
     </style>
