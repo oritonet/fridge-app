@@ -102,12 +102,12 @@ def display_items():
                 if c1.button("＋", key=f"plus_{item}"):
                     st.session_state.fridge_items[item]["count"] += 1
                     save_data(st.session_state.fridge_items)
-                    st.session_state.edit_mode[item] = False
+                    #st.session_state.edit_mode[item] = False
                     st.rerun()
                 if c2.button("−", key=f"minus_{item}"):
                     st.session_state.fridge_items[item]["count"] = max(0, count - 1)
                     save_data(st.session_state.fridge_items)
-                    st.session_state.edit_mode[item] = False
+                    #st.session_state.edit_mode[item] = False
                     st.rerun()
                 if c3.button("🗑️", key=f"delete_{item}"):
                     del st.session_state.fridge_items[item]
