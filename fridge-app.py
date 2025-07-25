@@ -89,23 +89,14 @@ def display_items():
             </div>
             """, unsafe_allow_html=True)
 
-            # 編集ボタン
-            if st.button("編集", key=f"edit_btn_{item}"):
+            # 編集ボタン（ラベルをトグル）
+            label = "閉じる" if st.session_state.edit_mode.get(item, False) else "編集"
+            if st.button(label, key=f"edit_btn_{item}"):
                 toggle_edit(item)
                 st.rerun()
-
-            # 編集モード中は操作ボタン表示（枠囲み）
+            
+            # 編集モード中は操作ボタン表示（枠なし）
             if st.session_state.edit_mode.get(item, False):
-                st.markdown(f"""
-                <div style="
-                    border: 1px solid #888;
-                    padding: 8px;
-                    border-radius: 8px;
-                    margin-top: 8px;
-                    background-color: #f9f9f9;
-                ">
-                """, unsafe_allow_html=True)
-
                 c1, c2, c3 = st.columns(3)
                 if c1.button("＋", key=f"plus_{item}"):
                     st.session_state.fridge_items[item]["count"] += 1
