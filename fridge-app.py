@@ -38,7 +38,7 @@ def get_image_base64(image_path):
 def display_items():
     for item, info in st.session_state.fridge_items.items():
         # 列幅を指定（画像, 名前, ＋, －, 🗑️）
-        col1, col2, col3, col4, col5 = st.columns([1, 4, 1, 1, 1])
+        col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 1, 1])
 
         # 画像表示
         with col1:
