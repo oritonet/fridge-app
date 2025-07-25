@@ -79,43 +79,60 @@ def display_items():
         if os.path.exists(image_path):
             image_base64 = get_image_base64(image_path)
 
-            # 画像と編集ボタンのUI
+            # 非表示のフォームを画像クリックで切り替える
+            js = f"""
+            <script>
+            const btn = document.getElementById("imgbtn_{item}");
+            if (btn) {{
+                btn.onclick = function() {{
+                    fetch("/_toggle_edit?item={item}").then(() => {{
+                        window.location.reload();
+                    }});
+                }}
+            }}
+            </script>
+            """
+
+            # カスタム透明ボタン付き画像HTML
             img_html = f"""
-            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
-                <div style="position: relative; width: 60px; height: 60px;">
-                    <img src="data:image/png;base64,{image_base64}"
-                         style="width: 60px; height: 60px; border-radius: 8px; object-fit: contain;" />
-                    <div style="
-                        position: absolute;
-                        top: 50%;
-                        left: 50%;
-                        transform: translate(-50%, -50%);
-                        background-color: rgba(0, 0, 0, 0.6);
-                        color: white;
-                        font-weight: bold;
-                        border-radius: 50%;
-                        width: 26px;
-                        height: 26px;
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        font-size: 16px;
-                        user-select: none;
-                    ">
-                        {count}
-                    </div>
-                </div>
-                <div style="flex-grow: 1;">
-                    <h3 style="margin: 0 0 8px 0;">{item}</h3>
+            <div style="position: relative; width: 80px; height: 80px; margin-bottom: 8px;">
+                <img src="data:image/png;base64,{image_base64}"
+                     style="width: 100%; height: 100%; border-radius: 8px; object-fit: contain;" />
+                <div style="
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    cursor: pointer;
+                    background-color: rgba(0,0,0,0);
+                    z-index: 10;
+                " id="imgbtn_{item}"></div>
+                <div style="
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background-color: rgba(0, 0, 0, 0.6);
+                    color: white;
+                    font-weight: bold;
+                    border-radius: 50%;
+                    width: 26px;
+                    height: 26px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    font-size: 16px;
+                    user-select: none;
+                    z-index: 5;
+                ">
+                    {count}
                 </div>
             </div>
+            {js}
             """
 
             st.markdown(img_html, unsafe_allow_html=True)
-
-            # 編集ボタン
-            if st.button("✏️ 編集", key=f"edit_btn_{item}"):
-                st.session_state[key_show] = not st.session_state[key_show]
 
             # 編集モードなら操作ボタンを表示
             if st.session_state[key_show]:
@@ -137,6 +154,7 @@ def display_items():
 
         else:
             st.text(f"{item}：画像なし, 個数: {count}")
+
 
 # セッション初期化
 if "fridge_items" not in st.session_state:
