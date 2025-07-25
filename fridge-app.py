@@ -39,38 +39,35 @@ def display_items():
     for item, info in st.session_state.fridge_items.items():
         image_path = os.path.join(IMAGE_DIR, info["image"])
         if os.path.exists(image_path):
-            image_base64 = get_image_base64(image_path)
-            image_html = f'<img src="data:image/png;base64,{image_base64}" style="width:30px;height:auto;">'
+            image = Image.open(image_path)
         else:
-            image_html = "画像なし"
+            image = None
 
-        item_id = item.replace(" ", "_")
-
-        # ボタン：クリック時にクエリ付きURLに遷移（リロード付き）
-        st.markdown(f"""
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: nowrap;">
-                {image_html}
-                <span style="font-size: 14px; white-space: nowrap;">{item}：{info["count"]}個</span>
-                <a href="?action=add_{item_id}" onclick="location.reload();" style="font-size:16px;">＋</a>
-                <a href="?action=sub_{item_id}" onclick="location.reload();" style="font-size:16px;">－</a>
-                <a href="?action=del_{item_id}" onclick="location.reload();" style="font-size:16px;">🗑️</a>
-            </div>
-        """, unsafe_allow_html=True)
-
-    # クエリパラメータ取得
-    action = st.query_params.get("action", [None])[0]
-    if action:
-        for item in list(st.session_state.fridge_items.keys()):
-            item_id = item.replace(" ", "_")
-            if action == f"add_{item_id}":
+        # 3列に分ける（画像・テキスト・操作ボタン）
+        col1, col2, col3, col4, col5 = st.columns([1, 2, 1, 1, 1])
+        with col1:
+            if image:
+                st.image(image, width=30)
+            else:
+                st.text("画像なし")
+        with col2:
+            st.markdown(f"**{item}：{info['count']}個**")
+        with col3:
+            if st.button("＋", key=f"add_{item}"):
                 st.session_state.fridge_items[item]["count"] += 1
-            elif action == f"sub_{item_id}":
-                st.session_state.fridge_items[item]["count"] = max(0, st.session_state.fridge_items[item]["count"] - 1)
-            elif action == f"del_{item_id}":
+                save_data(st.session_state.fridge_items)
+                st.rerun()
+        with col4:
+            if st.button("−", key=f"sub_{item}"):
+                st.session_state.fridge_items[item]["count"] = max(0, info["count"] - 1)
+                save_data(st.session_state.fridge_items)
+                st.rerun()
+        with col5:
+            if st.button("🗑️", key=f"del_{item}"):
                 del st.session_state.fridge_items[item]
-            save_data(st.session_state.fridge_items)
-            st.query_params.clear()  # パラメータを消して再表示
-            st.rerun()
+                save_data(st.session_state.fridge_items)
+                st.rerun()
+
 
 
 
