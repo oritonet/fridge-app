@@ -46,18 +46,18 @@ def display_items():
 
         item_id = item.replace(" ", "_")
 
-        # 横並びHTML（＋／ー／削除はリンク扱い）
+        # ボタン：クリック時にクエリ付きURLに遷移（リロード付き）
         st.markdown(f"""
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: nowrap;">
                 {image_html}
-                <div style="font-size: 14px; white-space: nowrap;">{item}：{info["count"]}個</div>
-                <a href="?action=add_{item_id}" style="font-size:16px;text-decoration:none;">＋</a>
-                <a href="?action=sub_{item_id}" style="font-size:16px;text-decoration:none;">－</a>
-                <a href="?action=del_{item_id}" style="font-size:16px;text-decoration:none;">🗑️</a>
+                <span style="font-size: 14px; white-space: nowrap;">{item}：{info["count"]}個</span>
+                <a href="?action=add_{item_id}" onclick="location.reload();" style="font-size:16px;">＋</a>
+                <a href="?action=sub_{item_id}" onclick="location.reload();" style="font-size:16px;">－</a>
+                <a href="?action=del_{item_id}" onclick="location.reload();" style="font-size:16px;">🗑️</a>
             </div>
         """, unsafe_allow_html=True)
 
-    # クエリパラメータから action を取得
+    # クエリパラメータ取得
     action = st.query_params.get("action", [None])[0]
     if action:
         for item in list(st.session_state.fridge_items.keys()):
@@ -69,9 +69,9 @@ def display_items():
             elif action == f"del_{item_id}":
                 del st.session_state.fridge_items[item]
             save_data(st.session_state.fridge_items)
-            # クエリパラメータを消して再読み込み
-            st.query_params.clear()
+            st.query_params.clear()  # パラメータを消して再表示
             st.rerun()
+
 
 
 
