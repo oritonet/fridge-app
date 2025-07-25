@@ -35,53 +35,44 @@ def get_image_base64(image_path):
         return base64.b64encode(f.read()).decode()
 
 
-# アイテム表示関数
 def display_items():
     for item, info in st.session_state.fridge_items.items():
-        image_path = os.path.join(IMAGE_DIR, info["image"])
-        if os.path.exists(image_path):
-            image_base64 = get_image_base64(image_path)
-            image_html = f'<img src="data:image/png;base64,{image_base64}" width="30">'
-        else:
-            image_html = "画像なし"
+        # 列幅を指定（画像, 名前, ＋, －, 🗑️）
+        col1, col2, col3, col4, col5 = st.columns([1, 4, 1, 1, 1])
 
-        st.markdown(f"""
-            <div style="display: flex; align-items: center; gap: 3px; margin-bottom: 3px;">
-                {image_html}
-                <strong style="font-size:12px;">{item}：{info["count"]}個</strong>
-            </div>
-        """, unsafe_allow_html=True)
-
-        col1, col2, col3 = st.columns(3)
+        # 画像表示
         with col1:
+            image_path = os.path.join(IMAGE_DIR, info["image"])
+            if os.path.exists(image_path):
+                st.image(image_path, width=30)
+            else:
+                st.write("画像なし")
+
+        # 名前と個数表示
+        with col2:
+            st.markdown(f"<strong style='font-size:14px'>{item}：{info['count']}個</strong>", unsafe_allow_html=True)
+
+        # ＋ボタン
+        with col3:
             if st.button("＋", key=f"add_{item}"):
                 st.session_state.fridge_items[item]["count"] += 1
                 save_data(st.session_state.fridge_items)
                 st.rerun()
-        with col2:
+
+        # －ボタン
+        with col4:
             if st.button("－", key=f"sub_{item}"):
                 st.session_state.fridge_items[item]["count"] = max(0, st.session_state.fridge_items[item]["count"] - 1)
                 save_data(st.session_state.fridge_items)
                 st.rerun()
-        with col3:
+
+        # 🗑️削除ボタン
+        with col5:
             if st.button("🗑️", key=f"del_{item}"):
                 del st.session_state.fridge_items[item]
                 save_data(st.session_state.fridge_items)
                 st.rerun()
 
-        # ↓ 縦並び用のUIに変更
-    if st.button("＋", key=f"add_{item}"):
-        st.session_state.fridge_items[item]["count"] += 1
-        save_data(st.session_state.fridge_items)
-        st.rerun()
-    if st.button("－", key=f"sub_{item}"):
-        st.session_state.fridge_items[item]["count"] = max(0, st.session_state.fridge_items[item]["count"] - 1)
-        save_data(st.session_state.fridge_items)
-        st.rerun()
-    if st.button("🗑️", key=f"del_{item}"):
-        del st.session_state.fridge_items[item]
-        save_data(st.session_state.fridge_items)
-        st.rerun()
 
 # セッション初期化
 if "fridge_items" not in st.session_state:
