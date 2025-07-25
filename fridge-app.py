@@ -96,7 +96,7 @@ def display_items():
             # ボタン押下で編集モードトグル
             if st.button("", key=button_id):
                 toggle_edit(item)
-                st.experimental_rerun()
+                st.rerun()
 
             # 編集モード中は操作ボタン表示
             if st.session_state.edit_mode.get(item, False):
@@ -105,16 +105,16 @@ def display_items():
                     st.session_state.fridge_items[item]["count"] += 1
                     save_data(st.session_state.fridge_items)
                     st.session_state.edit_mode[item] = False
-                    st.experimental_rerun()
+                    st.rerun()
                 if c2.button("−", key=f"minus_{item}"):
                     st.session_state.fridge_items[item]["count"] = max(0, count - 1)
                     save_data(st.session_state.fridge_items)
                     st.session_state.edit_mode[item] = False
-                    st.experimental_rerun()
+                    st.rerun()
                 if c3.button("🗑️", key=f"delete_{item}"):
                     del st.session_state.fridge_items[item]
                     save_data(st.session_state.fridge_items)
-                    st.experimental_rerun()
+                    st.rerun()
 
 # セッション初期化
 if "fridge_items" not in st.session_state:
@@ -153,7 +153,7 @@ if add_col2.button("追加"):
         st.session_state.edit_mode[name] = False
         save_data(st.session_state.fridge_items)
         st.success(f"{name} を追加しました")
-        st.experimental_rerun()
+        st.rerun()
 
 st.markdown("---")
 # レシピ提案
