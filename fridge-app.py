@@ -37,41 +37,43 @@ def get_image_base64(image_path):
 
 def display_items():
     for item, info in st.session_state.fridge_items.items():
-        # 列幅を指定（画像, 名前, ＋, －, 🗑️）
-        col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 1, 1])
+        image_path = os.path.join(IMAGE_DIR, info["image"])
+        if os.path.exists(image_path):
+            image_base64 = get_image_base64(image_path)
+            image_html = f'<img src="data:image/png;base64,{image_base64}" style="width:30px;height:auto;">'
+        else:
+            image_html = "画像なし"
 
-        # 画像表示
-        with col1:
-            image_path = os.path.join(IMAGE_DIR, info["image"])
-            if os.path.exists(image_path):
-                st.image(image_path, width=30)
-            else:
-                st.write("画像なし")
+        item_id = item.replace(" ", "_")  # ボタンID用に整形
 
-        # 名前と個数表示
-        with col2:
-            st.markdown(f"<strong style='font-size:14px'>{item}：{info['count']}個</strong>", unsafe_allow_html=True)
+        # HTML + inline CSSで1行横並び
+        st.markdown(f"""
+            <div style="display: flex; align-items: center; justify-content: flex-start; gap: 8px;
+                        margin-bottom: 10px; flex-wrap: nowrap;">
+                {image_html}
+                <div style="font-size: 14px; white-space: nowrap;">{item}：{info["count"]}個</div>
+                <form action="" method="post">
+                    <button name="action" value="add_{item_id}" style="font-size:16px;">＋</button>
+                    <button name="action" value="sub_{item_id}" style="font-size:16px;">－</button>
+                    <button name="action" value="del_{item_id}" style="font-size:16px;">🗑️</button>
+                </form>
+            </div>
+        """, unsafe_allow_html=True)
 
-        # ＋ボタン
-        with col3:
-            if st.button("＋", key=f"add_{item}"):
+    # ボタン処理（POSTではセッション維持が必要）
+    action = st.experimental_get_query_params().get("action", [None])[0]
+    if action:
+        for item in list(st.session_state.fridge_items.keys()):
+            item_id = item.replace(" ", "_")
+            if action == f"add_{item_id}":
                 st.session_state.fridge_items[item]["count"] += 1
-                save_data(st.session_state.fridge_items)
-                st.rerun()
-
-        # －ボタン
-        with col4:
-            if st.button("－", key=f"sub_{item}"):
+            elif action == f"sub_{item_id}":
                 st.session_state.fridge_items[item]["count"] = max(0, st.session_state.fridge_items[item]["count"] - 1)
-                save_data(st.session_state.fridge_items)
-                st.rerun()
-
-        # 🗑️削除ボタン
-        with col5:
-            if st.button("🗑️", key=f"del_{item}"):
+            elif action == f"del_{item_id}":
                 del st.session_state.fridge_items[item]
-                save_data(st.session_state.fridge_items)
-                st.rerun()
+            save_data(st.session_state.fridge_items)
+            st.experimental_rerun()
+
 
 
 # セッション初期化
