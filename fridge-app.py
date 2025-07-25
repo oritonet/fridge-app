@@ -37,44 +37,41 @@ def get_image_base64(image_path):
 
 def display_items():
     for item, info in st.session_state.fridge_items.items():
-        # 列幅：画像・名前・ボタンエリア
-        col1, col2, col3 = st.columns([1, 4, 4])
+        image_path = os.path.join(IMAGE_DIR, info["image"])
+        if os.path.exists(image_path):
+            image_base64 = get_image_base64(image_path)
+            image_html = f'<img src="data:image/png;base64,{image_base64}" style="width:30px;height:auto;">'
+        else:
+            image_html = "画像なし"
 
-        # 画像表示
+        item_id = item.replace(" ", "_")  # IDとして使えるよう整形
+
+        # 各アイテムに3つのボタン（＋, －, 🗑️）をStreamlit側で設置
+        st.markdown(f"""
+            <div style="display: flex; align-items: center; gap: 8px;
+                        margin-bottom: 10px; flex-wrap: nowrap;">
+                {image_html}
+                <span style="font-size: 14px; white-space: nowrap;">{item}：{info["count"]}個</span>
+            </div>
+        """, unsafe_allow_html=True)
+
+        col1, col2, col3 = st.columns([1, 1, 1])
         with col1:
-            image_path = os.path.join(IMAGE_DIR, info["image"])
-            if os.path.exists(image_path):
-                st.image(image_path, width=30)
-            else:
-                st.write("画像なし")
-
-        # アイテム名と個数
+            if st.button("＋", key=f"add_{item_id}"):
+                st.session_state.fridge_items[item]["count"] += 1
+                save_data(st.session_state.fridge_items)
+                st.rerun()
         with col2:
-            st.markdown(f"<span style='font-size:14px'>{item}：{info['count']}個</span>", unsafe_allow_html=True)
-
-        # ボタン3つを1つのフォーム内に並べて配置
+            if st.button("－", key=f"sub_{item_id}"):
+                st.session_state.fridge_items[item]["count"] = max(0, st.session_state.fridge_items[item]["count"] - 1)
+                save_data(st.session_state.fridge_items)
+                st.rerun()
         with col3:
-            with st.form(key=f"form_{item}", clear_on_submit=True):
-                b1, b2, b3 = st.columns([1, 1, 1])
-                with b1:
-                    add = st.form_submit_button("＋")
-                with b2:
-                    sub = st.form_submit_button("－")
-                with b3:
-                    delete = st.form_submit_button("🗑️")
+            if st.button("🗑️", key=f"del_{item_id}"):
+                del st.session_state.fridge_items[item]
+                save_data(st.session_state.fridge_items)
+                st.rerun()
 
-                if add:
-                    st.session_state.fridge_items[item]["count"] += 1
-                    save_data(st.session_state.fridge_items)
-                    st.rerun()
-                elif sub:
-                    st.session_state.fridge_items[item]["count"] = max(0, st.session_state.fridge_items[item]["count"] - 1)
-                    save_data(st.session_state.fridge_items)
-                    st.rerun()
-                elif delete:
-                    del st.session_state.fridge_items[item]
-                    save_data(st.session_state.fridge_items)
-                    st.rerun()
 
 
 
