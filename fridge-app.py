@@ -17,6 +17,7 @@ default_items = {
     "牛乳": {"count": 1, "image": "milk.png"}
 }
 
+# データロード・セーブ
 def load_data():
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, "r", encoding="utf-8") as f:
@@ -27,150 +28,96 @@ def save_data(data):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
+# Base64画像変換
 def get_image_base64(image_path):
     with open(image_path, "rb") as f:
         return base64.b64encode(f.read()).decode()
 
+# セーフリロード
 def safe_rerun():
     try:
         st.experimental_rerun()
     except Exception:
         pass
 
-def process_buttons():
-    rerun_needed = False
-    keys_to_delete = []
+# 画像クリックによる編集状態の保持
+if "fridge_items" not in st.session_state:
+    st.session_state.fridge_items = load_data()
 
-    for item in list(st.session_state.fridge_items.keys()):
-        # 押下フラグを取得
-        pressed_add = st.session_state.get(f"btn_add_{item}_clicked", False)
-        pressed_sub = st.session_state.get(f"btn_sub_{item}_clicked", False)
-        pressed_del = st.session_state.get(f"btn_del_{item}_clicked", False)
+if "edit_mode" not in st.session_state:
+    st.session_state.edit_mode = {}
 
-        if pressed_add:
-            st.session_state.fridge_items[item]["count"] += 1
-            rerun_needed = True
-            st.session_state[f"btn_add_{item}_clicked"] = False  # フラグリセット
-        if pressed_sub:
-            st.session_state.fridge_items[item]["count"] = max(0, st.session_state.fridge_items[item]["count"] - 1)
-            rerun_needed = True
-            st.session_state[f"btn_sub_{item}_clicked"] = False
-        if pressed_del:
-            keys_to_delete.append(item)
-            rerun_needed = True
-            st.session_state[f"btn_del_{item}_clicked"] = False
+for item in st.session_state.fridge_items:
+    if item not in st.session_state.edit_mode:
+        st.session_state.edit_mode[item] = False
 
-    for key in keys_to_delete:
-        del st.session_state.fridge_items[key]
-
-    if rerun_needed:
-        save_data(st.session_state.fridge_items)
-        safe_rerun()
+# 編集用ボタン処理
+def toggle_edit(item):
+    st.session_state.edit_mode[item] = not st.session_state.edit_mode[item]
 
 def display_items():
-    for item, info in st.session_state.fridge_items.items():
+    st.write("### 🧊 現在の食材一覧")
+
+    cols = st.columns(3)
+
+    for idx, (item, info) in enumerate(st.session_state.fridge_items.items()):
         image_path = os.path.join(IMAGE_DIR, info["image"])
         count = info["count"]
-        key_show = f"show_buttons_{item}"
 
-        if key_show not in st.session_state:
-            st.session_state[key_show] = False
+        if not os.path.exists(image_path):
+            st.warning(f"{item} の画像が見つかりません")
+            continue
 
-        if os.path.exists(image_path):
-            image_base64 = get_image_base64(image_path)
+        image_base64 = get_image_base64(image_path)
+        key_show = f"edit_{item}"
 
-            # 非表示のフォームを画像クリックで切り替える
-            js = f"""
-            <script>
-            const btn = document.getElementById("imgbtn_{item}");
-            if (btn) {{
-                btn.onclick = function() {{
-                    fetch("/_toggle_edit?item={item}").then(() => {{
-                        window.location.reload();
-                    }});
-                }}
-            }}
-            </script>
-            """
-
-            # カスタム透明ボタン付き画像HTML
-            img_html = f"""
-            <div style="position: relative; width: 80px; height: 80px; margin-bottom: 8px;">
+        # HTMLで画像クリック検知＋個数オーバーレイ
+        container = cols[idx % 3]
+        with container:
+            button_id = f"imgbtn_{item}"
+            overlay_html = f"""
+            <div style="position: relative; width: 100px; height: 100px; margin: auto;">
                 <img src="data:image/png;base64,{image_base64}"
-                     style="width: 100%; height: 100%; border-radius: 8px; object-fit: contain;" />
-                <div style="
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    cursor: pointer;
-                    background-color: rgba(0,0,0,0);
-                    z-index: 10;
-                " id="imgbtn_{item}"></div>
-                <div style="
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    background-color: rgba(0, 0, 0, 0.6);
-                    color: white;
-                    font-weight: bold;
-                    border-radius: 50%;
-                    width: 26px;
-                    height: 26px;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    font-size: 16px;
-                    user-select: none;
-                    z-index: 5;
-                ">
+                    style="width: 100px; height: 100px; border-radius: 8px; object-fit: cover;" />
+                <div onclick="document.getElementById('{button_id}').click();"
+                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                           cursor: pointer; background-color: rgba(0,0,0,0); z-index: 10;">
+                </div>
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                            background-color: rgba(0, 0, 0, 0.6); color: white; font-size: 16px;
+                            width: 28px; height: 28px; border-radius: 50%; display: flex;
+                            align-items: center; justify-content: center; font-weight: bold; z-index: 5;">
                     {count}
                 </div>
             </div>
-            {js}
             """
+            st.markdown(overlay_html, unsafe_allow_html=True)
 
-            st.markdown(img_html, unsafe_allow_html=True)
+            # 非表示のボタンで画像クリックを検知
+            if st.button(" ", key=button_id):
+                toggle_edit(item)
+                st.rerun()
 
-            # 編集モードなら操作ボタンを表示
-            if st.session_state[key_show]:
-                col1, col2, col3 = st.columns([1, 1, 1])
-                if col1.button("＋", key=f"btn_add_{item}"):
+            # 編集モード中はボタン表示
+            if st.session_state.edit_mode.get(item, False):
+                c1, c2, c3 = st.columns(3)
+                if c1.button("＋", key=f"plus_{item}"):
                     st.session_state.fridge_items[item]["count"] += 1
                     save_data(st.session_state.fridge_items)
-                    st.session_state[key_show] = False
+                    st.session_state.edit_mode[item] = False
                     st.rerun()
-                if col2.button("−", key=f"btn_sub_{item}"):
+                if c2.button("−", key=f"minus_{item}"):
                     st.session_state.fridge_items[item]["count"] = max(0, count - 1)
                     save_data(st.session_state.fridge_items)
-                    st.session_state[key_show] = False
+                    st.session_state.edit_mode[item] = False
                     st.rerun()
-                if col3.button("🗑️", key=f"btn_del_{item}"):
+                if c3.button("🗑️", key=f"delete_{item}"):
                     del st.session_state.fridge_items[item]
                     save_data(st.session_state.fridge_items)
                     st.rerun()
 
-        else:
-            st.text(f"{item}：画像なし, 個数: {count}")
-
-
-# セッション初期化
-if "fridge_items" not in st.session_state:
-    st.session_state.fridge_items = load_data()
-
-# ボタン押下フラグ初期化（新アイテム追加時に対応）
-for item in st.session_state.fridge_items.keys():
-    for prefix in ["btn_add_", "btn_sub_", "btn_del_"]:
-        key = f"{prefix}{item}_clicked"
-        if key not in st.session_state:
-            st.session_state[key] = False
-
-process_buttons()  # ボタン押下の状態を処理・反映
-
+# 表示
 st.markdown("<h2 style='font-size:20px;'>🧊 冷蔵庫在庫管理アプリ</h2>", unsafe_allow_html=True)
-
 display_items()
 
 st.markdown("---")
@@ -192,14 +139,13 @@ if add_col2.button("追加"):
         }.get(name, "default.png")
 
         st.session_state.fridge_items[name] = {"count": 1, "image": image_file}
-        # 追加したアイテムのボタン押下フラグも初期化
-        for prefix in ["btn_add_", "btn_sub_", "btn_del_"]:
-            st.session_state[f"{prefix}{name}_clicked"] = False
+        st.session_state.edit_mode[name] = False
         save_data(st.session_state.fridge_items)
         st.success(f"{name} を追加しました")
         st.rerun()
 
 st.markdown("---")
+# レシピ提案
 def suggest_recipe(data):
     ingredients = data.keys()
     if "トマト" in ingredients and "卵" in ingredients:
@@ -214,11 +160,11 @@ def suggest_recipe(data):
 if st.button("🍳 おすすめレシピを表示"):
     st.info(suggest_recipe(st.session_state.fridge_items))
 
+# 楽天レシピAPI連携
 RAKUTEN_APP_ID = "1077657241734895268"
 
 def get_rakuten_recipes(ingredients):
     material_str = "、".join(list(ingredients)[:5])
-    st.write(f"楽天レシピAPIに送信する材料パラメータ: {material_str}")
     url = "https://app.rakuten.co.jp/services/api/Recipe/RecipeMaterial/20170426"
     params = {
         "applicationId": RAKUTEN_APP_ID,
@@ -229,8 +175,7 @@ def get_rakuten_recipes(ingredients):
         res = requests.get(url, params=params)
         res.raise_for_status()
         data = res.json()
-        recipes = data.get("result", [])
-        return recipes
+        return data.get("result", [])
     except Exception as e:
         st.error(f"楽天レシピAPIの取得に失敗しました: {e}")
         return []
