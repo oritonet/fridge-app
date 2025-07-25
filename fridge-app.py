@@ -45,7 +45,6 @@ def display_items():
 
         st.markdown("---")  # 区切り線
 
-        # カード風ボックス
         with st.container():
             cols = st.columns([1, 3])
             with cols[0]:
@@ -56,22 +55,27 @@ def display_items():
             with cols[1]:
                 st.markdown(f"### {item}")
                 st.markdown(f"個数: {info['count']}個")
+
                 btn_cols = st.columns([1,1,1])
                 with btn_cols[0]:
                     if st.button("＋", key=f"add_{item}"):
                         st.session_state.fridge_items[item]["count"] += 1
                         save_data(st.session_state.fridge_items)
                         st.experimental_rerun()
+
                 with btn_cols[1]:
                     if st.button("−", key=f"sub_{item}"):
-                        st.session_state.fridge_items[item]["count"] = max(0, info["count"] - 1)
+                        current_count = st.session_state.fridge_items[item]["count"]
+                        st.session_state.fridge_items[item]["count"] = max(0, current_count - 1)
                         save_data(st.session_state.fridge_items)
                         st.experimental_rerun()
+
                 with btn_cols[2]:
                     if st.button("🗑️", key=f"del_{item}"):
                         del st.session_state.fridge_items[item]
                         save_data(st.session_state.fridge_items)
                         st.experimental_rerun()
+
 
 
 
