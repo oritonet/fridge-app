@@ -37,15 +37,43 @@ def safe_rerun():
     except Exception:
         pass
 
-def display_items():
+def process_buttons():
     rerun_needed = False
     keys_to_delete = []
 
+    for item in list(st.session_state.fridge_items.keys()):
+        # 押下フラグを取得
+        pressed_add = st.session_state.get(f"btn_add_{item}_clicked", False)
+        pressed_sub = st.session_state.get(f"btn_sub_{item}_clicked", False)
+        pressed_del = st.session_state.get(f"btn_del_{item}_clicked", False)
+
+        if pressed_add:
+            st.session_state.fridge_items[item]["count"] += 1
+            rerun_needed = True
+            st.session_state[f"btn_add_{item}_clicked"] = False  # フラグリセット
+        if pressed_sub:
+            st.session_state.fridge_items[item]["count"] = max(0, st.session_state.fridge_items[item]["count"] - 1)
+            rerun_needed = True
+            st.session_state[f"btn_sub_{item}_clicked"] = False
+        if pressed_del:
+            keys_to_delete.append(item)
+            rerun_needed = True
+            st.session_state[f"btn_del_{item}_clicked"] = False
+
+    for key in keys_to_delete:
+        del st.session_state.fridge_items[key]
+
+    if rerun_needed:
+        save_data(st.session_state.fridge_items)
+        safe_rerun()
+
+def display_items():
     for item, info in st.session_state.fridge_items.items():
         image_path = os.path.join(IMAGE_DIR, info["image"])
+        count = info["count"]
+
         if os.path.exists(image_path):
             image_base64 = get_image_base64(image_path)
-            count = info["count"]
 
             html = f"""
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
@@ -80,43 +108,28 @@ def display_items():
             st.markdown(html, unsafe_allow_html=True)
 
             col1, col2, col3 = st.columns([1,1,1])
-            pressed_add = col1.button("＋", key=f"btn_add_{item}")
-            pressed_sub = col2.button("−", key=f"btn_sub_{item}")
-            pressed_del = col3.button("🗑️", key=f"btn_del_{item}")
 
-            if pressed_add:
-                st.session_state.fridge_items[item]["count"] += 1
-                rerun_needed = True
-            if pressed_sub:
-                st.session_state.fridge_items[item]["count"] = max(0, st.session_state.fridge_items[item]["count"] - 1)
-                rerun_needed = True
-            if pressed_del:
-                keys_to_delete.append(item)
-                rerun_needed = True
+            if col1.button("＋", key=f"btn_add_{item}"):
+                st.session_state[f"btn_add_{item}_clicked"] = True
+            if col2.button("−", key=f"btn_sub_{item}"):
+                st.session_state[f"btn_sub_{item}_clicked"] = True
+            if col3.button("🗑️", key=f"btn_del_{item}"):
+                st.session_state[f"btn_del_{item}_clicked"] = True
         else:
-            st.text(f"{item}：画像なし, 個数: {info['count']}")
+            st.text(f"{item}：画像なし, 個数: {count}")
 
-    for key in keys_to_delete:
-        del st.session_state.fridge_items[key]
-
-    if rerun_needed:
-        save_data(st.session_state.fridge_items)
-        safe_rerun()
-
+# セッション初期化
 if "fridge_items" not in st.session_state:
     st.session_state.fridge_items = load_data()
 
-st.markdown("""
-    <style>
-    .stButton > button {
-        padding: 6px 12px !important;
-        font-size: 18px !important;
-        min-width: 48px !important;
-        height: 38px !important;
-        line-height: 1 !important;
-    }
-    </style>
-""", unsafe_allow_html=True)
+# ボタン押下フラグ初期化（新アイテム追加時に対応）
+for item in st.session_state.fridge_items.keys():
+    for prefix in ["btn_add_", "btn_sub_", "btn_del_"]:
+        key = f"{prefix}{item}_clicked"
+        if key not in st.session_state:
+            st.session_state[key] = False
+
+process_buttons()  # ボタン押下の状態を処理・反映
 
 st.markdown("<h2 style='font-size:20px;'>🧊 冷蔵庫在庫管理アプリ</h2>", unsafe_allow_html=True)
 
@@ -141,6 +154,9 @@ if add_col2.button("追加"):
         }.get(name, "default.png")
 
         st.session_state.fridge_items[name] = {"count": 1, "image": image_file}
+        # 追加したアイテムのボタン押下フラグも初期化
+        for prefix in ["btn_add_", "btn_sub_", "btn_del_"]:
+            st.session_state[f"{prefix}{name}_clicked"] = False
         save_data(st.session_state.fridge_items)
         st.success(f"{name} を追加しました")
         safe_rerun()
