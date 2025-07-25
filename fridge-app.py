@@ -61,59 +61,52 @@ def display_items():
         col = cols[idx % 3]
 
         with col:
-            edit_mode = st.session_state.edit_mode.get(item, False)
-            button_label = "閉じる" if edit_mode else "編集"
-
-            # 編集ボタンを画像中央に配置（フォームでボタン状態を管理）
-            with st.form(key=f"form_{item}"):
-                st.markdown(f"""
-                <div style="position: relative; width: 100px; height: 100px; margin: auto;">
-                    <img src="data:image/png;base64,{image_base64}"
-                        style="width: 100px; height: 100px; border-radius: 8px; object-fit: cover;" />
-                    <div style="
-                        position: absolute;
-                        top: 50%;
-                        left: 50%;
-                        transform: translate(-50%, -50%);
-                        z-index: 2;
-                    ">
-                        <button style="
-                            background-color: rgba(0,0,0,0.6);
-                            color: white;
-                            border: none;
-                            border-radius: 12px;
-                            padding: 4px 12px;
-                            font-size: 14px;
-                            cursor: pointer;
-                        " type="submit">{button_label}</button>
-                    </div>
-                    <div style="
-                        position: absolute;
-                        top: 5px;
-                        right: 5px;
-                        background-color: rgba(0,0,0,0.6);
-                        color: white;
-                        border-radius: 50%;
-                        width: 28px;
-                        height: 28px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        font-size: 14px;
-                        user-select: none;
-                    ">
-                        {count}
-                    </div>
+            # 画像表示
+            st.markdown(f"""
+            <div style="position: relative; width: 100px; height: 100px; margin: auto;">
+                <img src="data:image/png;base64,{image_base64}"
+                    style="width: 100px; height: 100px; border-radius: 8px; object-fit: cover;" />
+                <div style="
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background-color: rgba(0,0,0,0.6);
+                    color: white;
+                    font-weight: bold;
+                    border-radius: 50%;
+                    width: 36px;
+                    height: 36px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 18px;
+                    user-select: none;
+                    pointer-events: none;
+                ">
+                    {count}
                 </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # 編集ボタン（ラベル切り替え）
+            label = "閉じる" if st.session_state.edit_mode.get(item, False) else "編集"
+            if st.button(label, key=f"edit_btn_{item}"):
+                toggle_edit(item)
+                st.rerun()
+
+            # 編集モード中は操作ボタン表示（枠囲みあり）
+            if st.session_state.edit_mode.get(item, False):
+                st.markdown(f"""
+                <div style="
+                    border: 1px solid #888;
+                    padding: 8px;
+                    border-radius: 8px;
+                    margin-top: 8px;
+                    background-color: #f9f9f9;
+                ">
                 """, unsafe_allow_html=True)
 
-                submitted = st.form_submit_button(label="", use_container_width=True)
-                if submitted:
-                    toggle_edit(item)
-                    st.rerun()
-
-            # 編集モード時：操作ボタン（＋−🗑️）表示（枠なし）
-            if edit_mode:
                 c1, c2, c3 = st.columns(3)
                 if c1.button("＋", key=f"plus_{item}"):
                     st.session_state.fridge_items[item]["count"] += 1
