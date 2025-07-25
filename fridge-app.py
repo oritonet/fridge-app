@@ -79,11 +79,10 @@ def display_items():
         if os.path.exists(image_path):
             image_base64 = get_image_base64(image_path)
 
-            # クリック可能な画像 + JSトリガー
-            img_click_html = f"""
+            # 画像と編集ボタンのUI
+            img_html = f"""
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
-                <div onclick="fetch('/_click_image_{item}', {{method: 'POST'}})"
-                    style="position: relative; width: 60px; height: 60px; cursor: pointer;">
+                <div style="position: relative; width: 60px; height: 60px;">
                     <img src="data:image/png;base64,{image_base64}"
                          style="width: 60px; height: 60px; border-radius: 8px; object-fit: contain;" />
                     <div style="
@@ -112,35 +111,13 @@ def display_items():
             </div>
             """
 
-            # JavaScriptクリック→streamlitの値変更
-            js = f"""
-            <script>
-                const imgDiv = document.querySelectorAll("div[onclick]");
-                imgDiv.forEach(div => {{
-                    div.addEventListener("click", () => {{
-                        const event = new Event("input", {{ bubbles: true }});
-                        const input = window.parent.document.querySelector("input[name='toggle_{item}']");
-                        if (input) {{
-                            input.checked = !input.checked;
-                            input.dispatchEvent(event);
-                        }}
-                    }});
-                }});
-            </script>
-            """
-            # hidden input (トグルの代用)
-            st.markdown(f"""
-                <input type="checkbox" name="toggle_{item}" style="display:none"
-                    {'checked' if st.session_state[key_show] else ''}>
-            """, unsafe_allow_html=True)
-            # 画像クリックUI
-            st.markdown(img_click_html, unsafe_allow_html=True)
-            st.markdown(js, unsafe_allow_html=True)
+            st.markdown(img_html, unsafe_allow_html=True)
 
-            # Python側でも toggle を管理
-            toggle = st.checkbox(f"", key=f"toggle_checkbox_{item}", label_visibility="collapsed", value=st.session_state[key_show])
-            st.session_state[key_show] = toggle
+            # 編集ボタン
+            if st.button("✏️ 編集", key=f"edit_btn_{item}"):
+                st.session_state[key_show] = not st.session_state[key_show]
 
+            # 編集モードなら操作ボタンを表示
             if st.session_state[key_show]:
                 col1, col2, col3 = st.columns([1, 1, 1])
                 if col1.button("＋", key=f"btn_add_{item}"):
