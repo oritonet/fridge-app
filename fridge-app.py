@@ -35,7 +35,7 @@ def get_image_base64(image_path):
 
 # 編集用ボタン処理
 def toggle_edit(item):
-    # すでに開いている編集モードを全て閉じてから開く
+    # すべての編集モードをOFFにしてから、対象アイテムをONに
     for key in st.session_state.edit_mode.keys():
         st.session_state.edit_mode[key] = False
     st.session_state.edit_mode[item] = True
@@ -57,19 +57,27 @@ def display_items():
         col = cols[idx % 3]
 
         with col:
-            button_id = f"btn_{item}"
-            # 画像と数字のオーバーレイ
+            # hidden checkbox で編集モード管理
+            checkbox_key = f"edit_checkbox_{item}"
+            # 初期値はセッション状態に合わせる
+            checked = st.checkbox("", key=checkbox_key, value=st.session_state.edit_mode.get(item, False), label_visibility="collapsed")
+
+            # チェック状態がセッションと違えば状態更新して再描画
+            if checked != st.session_state.edit_mode.get(item, False):
+                # すべての編集モードをOFFに
+                for k in st.session_state.edit_mode.keys():
+                    st.session_state.edit_mode[k] = False
+                # 対象だけON
+                st.session_state.edit_mode[item] = checked
+                st.experimental_rerun()
+
+            # 画像と数字のオーバーレイHTML
             overlay_html = f"""
             <div style="position: relative; width: 100px; height: 100px; margin: auto;">
                 <img src="data:image/png;base64,{image_base64}"
                     style="width: 100px; height: 100px; border-radius: 8px; object-fit: cover;" />
-                <!-- クリック可能な透明層 -->
-                <div onclick="document.getElementById('{button_id}').click();"
-                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-                           cursor: pointer; background-color: rgba(0,0,0,0); z-index: 10;">
-                </div>
-                <!-- 数字ボタン -->
-                <button id="{button_id}"
+                <!-- 数字の丸ボタン（クリックでhidden checkboxをクリック） -->
+                <div onclick="document.getElementById('{checkbox_key}').click();"
                     style="
                         position: absolute;
                         top: 50%;
@@ -81,22 +89,19 @@ def display_items():
                         border-radius: 50%;
                         width: 36px;
                         height: 36px;
-                        border: none;
                         cursor: pointer;
                         font-size: 18px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
                         user-select: none;
                         z-index: 20;
                     ">
                     {count}
-                </button>
+                </div>
             </div>
             """
             st.markdown(overlay_html, unsafe_allow_html=True)
-
-            # ボタン押下で編集モードトグル
-            if st.button("", key=button_id):
-                toggle_edit(item)
-                st.rerun()
 
             # 編集モード中は操作ボタン表示
             if st.session_state.edit_mode.get(item, False):
@@ -105,16 +110,16 @@ def display_items():
                     st.session_state.fridge_items[item]["count"] += 1
                     save_data(st.session_state.fridge_items)
                     st.session_state.edit_mode[item] = False
-                    st.rerun()
+                    st.experimental_rerun()
                 if c2.button("−", key=f"minus_{item}"):
                     st.session_state.fridge_items[item]["count"] = max(0, count - 1)
                     save_data(st.session_state.fridge_items)
                     st.session_state.edit_mode[item] = False
-                    st.rerun()
+                    st.experimental_rerun()
                 if c3.button("🗑️", key=f"delete_{item}"):
                     del st.session_state.fridge_items[item]
                     save_data(st.session_state.fridge_items)
-                    st.rerun()
+                    st.experimental_rerun()
 
 # セッション初期化
 if "fridge_items" not in st.session_state:
@@ -153,7 +158,7 @@ if add_col2.button("追加"):
         st.session_state.edit_mode[name] = False
         save_data(st.session_state.fridge_items)
         st.success(f"{name} を追加しました")
-        st.rerun()
+        st.experimental_rerun()
 
 st.markdown("---")
 # レシピ提案
