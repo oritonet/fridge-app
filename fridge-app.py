@@ -48,7 +48,6 @@ def display_items():
             image_base64 = get_image_base64(image_path)
             count = info["count"]
 
-            # 画像＋中央に個数オーバーレイ表示のHTML
             html = f"""
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
                 <div style="position: relative; width: 60px; height: 60px;">
@@ -76,19 +75,12 @@ def display_items():
                 </div>
                 <div style="flex-grow: 1;">
                     <h3 style="margin: 0 0 8px 0;">{item}</h3>
-                    <div style="display: flex; gap: 6px;">
-                        <!-- 実際の操作は下のStreamlitボタンで行うためHTMLボタンは装飾だけ -->
-                        <button style="font-size: 18px; padding: 6px 12px;">＋</button>
-                        <button style="font-size: 18px; padding: 6px 12px;">－</button>
-                        <button style="font-size: 18px; padding: 6px 12px;">🗑️</button>
-                    </div>
                 </div>
             </div>
             """
-
             st.markdown(html, unsafe_allow_html=True)
 
-            # Streamlitのボタンで操作（ここが本当の動作を担当）
+            # ここにボタンを横並びで表示
             col1, col2, col3 = st.columns([1,1,1])
             with col1:
                 if st.button("＋", key=f"add_{item}"):
@@ -108,6 +100,7 @@ def display_items():
                     safe_rerun()
         else:
             st.text(f"{item}：画像なし, 個数: {info['count']}")
+
 
 # セッション初期化
 if "fridge_items" not in st.session_state:
