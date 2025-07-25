@@ -80,27 +80,27 @@ def display_items():
             """
             st.markdown(html, unsafe_allow_html=True)
 
-            # ここにボタンを横並びで表示
             col1, col2, col3 = st.columns([1,1,1])
-            with col1:
-                if st.button("＋", key=f"add_{item}"):
-                    st.session_state.fridge_items[item]["count"] += 1
-                    save_data(st.session_state.fridge_items)
-                    safe_rerun()
-            with col2:
-                if st.button("−", key=f"sub_{item}"):
-                    current_count = st.session_state.fridge_items[item]["count"]
-                    st.session_state.fridge_items[item]["count"] = max(0, current_count - 1)
-                    save_data(st.session_state.fridge_items)
-                    safe_rerun()
-            with col3:
-                if st.button("🗑️", key=f"del_{item}"):
-                    del st.session_state.fridge_items[item]
-                    save_data(st.session_state.fridge_items)
-                    safe_rerun()
+            pressed_add = col1.button("＋", key=f"btn_add_{item}")
+            pressed_sub = col2.button("−", key=f"btn_sub_{item}")
+            pressed_del = col3.button("🗑️", key=f"btn_del_{item}")
+
+            if pressed_add:
+                st.session_state.fridge_items[item]["count"] += 1
+                save_data(st.session_state.fridge_items)
+                safe_rerun()
+            if pressed_sub:
+                current_count = st.session_state.fridge_items[item]["count"]
+                st.session_state.fridge_items[item]["count"] = max(0, current_count - 1)
+                save_data(st.session_state.fridge_items)
+                safe_rerun()
+            if pressed_del:
+                del st.session_state.fridge_items[item]
+                save_data(st.session_state.fridge_items)
+                safe_rerun()
+
         else:
             st.text(f"{item}：画像なし, 個数: {info['count']}")
-
 
 # セッション初期化
 if "fridge_items" not in st.session_state:
