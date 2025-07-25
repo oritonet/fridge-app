@@ -17,24 +17,20 @@ default_items = {
     "牛乳": {"count": 1, "image": "milk.png"}
 }
 
-# データ読み込み
 def load_data():
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
     return default_items
 
-# データ保存
 def save_data(data):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-# 画像をbase64に変換
 def get_image_base64(image_path):
     with open(image_path, "rb") as f:
         return base64.b64encode(f.read()).decode()
 
-# 安全に再実行（Streamlitのrerun）
 def safe_rerun():
     try:
         st.experimental_rerun()
@@ -42,6 +38,9 @@ def safe_rerun():
         pass
 
 def display_items():
+    rerun_needed = False
+    keys_to_delete = []
+
     for item, info in st.session_state.fridge_items.items():
         image_path = os.path.join(IMAGE_DIR, info["image"])
         if os.path.exists(image_path):
@@ -87,26 +86,26 @@ def display_items():
 
             if pressed_add:
                 st.session_state.fridge_items[item]["count"] += 1
-                save_data(st.session_state.fridge_items)
-                safe_rerun()
+                rerun_needed = True
             if pressed_sub:
-                current_count = st.session_state.fridge_items[item]["count"]
-                st.session_state.fridge_items[item]["count"] = max(0, current_count - 1)
-                save_data(st.session_state.fridge_items)
-                safe_rerun()
+                st.session_state.fridge_items[item]["count"] = max(0, st.session_state.fridge_items[item]["count"] - 1)
+                rerun_needed = True
             if pressed_del:
-                del st.session_state.fridge_items[item]
-                save_data(st.session_state.fridge_items)
-                safe_rerun()
-
+                keys_to_delete.append(item)
+                rerun_needed = True
         else:
             st.text(f"{item}：画像なし, 個数: {info['count']}")
 
-# セッション初期化
+    for key in keys_to_delete:
+        del st.session_state.fridge_items[key]
+
+    if rerun_needed:
+        save_data(st.session_state.fridge_items)
+        safe_rerun()
+
 if "fridge_items" not in st.session_state:
     st.session_state.fridge_items = load_data()
 
-# CSS調整（ボタンを大きく）
 st.markdown("""
     <style>
     .stButton > button {
@@ -119,13 +118,10 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# タイトル
 st.markdown("<h2 style='font-size:20px;'>🧊 冷蔵庫在庫管理アプリ</h2>", unsafe_allow_html=True)
 
-# 在庫一覧表示
 display_items()
 
-# 新規追加セクション
 st.markdown("---")
 st.subheader("🥕 食材を追加")
 
@@ -149,7 +145,6 @@ if add_col2.button("追加"):
         st.success(f"{name} を追加しました")
         safe_rerun()
 
-# レシピ表示
 st.markdown("---")
 def suggest_recipe(data):
     ingredients = data.keys()
