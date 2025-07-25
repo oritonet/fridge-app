@@ -1,23 +1,19 @@
 import streamlit as st
 import json
 import os
-from PIL import Image
 import base64
 import requests
 
-# 定数
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_FILE = os.path.join(BASE_DIR, "data.json")
 IMAGE_DIR = os.path.join(BASE_DIR, "images")
 
-# 初期データ
 default_items = {
     "トマト": {"count": 2, "image": "tomato.png"},
     "卵": {"count": 6, "image": "egg.png"},
     "牛乳": {"count": 1, "image": "milk.png"}
 }
 
-# データロード・セーブ
 def load_data():
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, "r", encoding="utf-8") as f:
@@ -28,21 +24,27 @@ def save_data(data):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-# Base64画像変換
 def get_image_base64(image_path):
     with open(image_path, "rb") as f:
         return base64.b64encode(f.read()).decode()
 
-# 編集用ボタン処理
 def toggle_edit(item):
-    # すべての編集モードをOFFにしてから、対象アイテムをONに
-    for key in st.session_state.edit_mode.keys():
-        st.session_state.edit_mode[key] = False
+    for k in st.session_state.edit_mode.keys():
+        st.session_state.edit_mode[k] = False
     st.session_state.edit_mode[item] = True
+
+if "fridge_items" not in st.session_state:
+    st.session_state.fridge_items = load_data()
+
+if "edit_mode" not in st.session_state:
+    st.session_state.edit_mode = {}
+
+for item in st.session_state.fridge_items:
+    if item not in st.session_state.edit_mode:
+        st.session_state.edit_mode[item] = False
 
 def display_items():
     st.write("### 🧊 現在の食材一覧")
-
     cols = st.columns(3)
 
     for idx, (item, info) in enumerate(st.session_state.fridge_items.items()):
@@ -57,82 +59,41 @@ def display_items():
         col = cols[idx % 3]
 
         with col:
-            # hidden checkbox で編集モード管理
-            checkbox_key = f"edit_checkbox_{item}"
-            # 初期値はセッション状態に合わせる
-            checked = st.checkbox("", key=checkbox_key, value=st.session_state.edit_mode.get(item, False), label_visibility="collapsed")
+            st.markdown(f"""
+            <div style="width:100px; margin:auto;">
+                <img src="data:image/png;base64,{image_base64}" 
+                    style="width:100px; height:100px; border-radius:8px; object-fit:cover;" />
+            </div>
+            """, unsafe_allow_html=True)
 
-            # チェック状態がセッションと違えば状態更新して再描画
-            if checked != st.session_state.edit_mode.get(item, False):
-                # すべての編集モードをOFFに
-                for k in st.session_state.edit_mode.keys():
-                    st.session_state.edit_mode[k] = False
-                # 対象だけON
-                st.session_state.edit_mode[item] = checked
+            st.markdown(f"<div style='text-align:center; font-weight:bold; font-size:18px; margin-bottom:6px;'>{count} 個</div>", unsafe_allow_html=True)
+
+            if st.button("編集", key=f"edit_btn_{item}"):
+                toggle_edit(item)
                 st.rerun()
 
-            # 画像と数字のオーバーレイHTML
-            overlay_html = f"""
-            <div style="position: relative; width: 100px; height: 100px; margin: auto;">
-                <img src="data:image/png;base64,{image_base64}"
-                    style="width: 100px; height: 100px; border-radius: 8px; object-fit: cover;" />
-                <!-- 数字の丸ボタン（クリックでhidden checkboxをクリック） -->
-                <div onclick="document.getElementById('{checkbox_key}').click();"
-                    style="
-                        position: absolute;
-                        top: 50%;
-                        left: 50%;
-                        transform: translate(-50%, -50%);
-                        background-color: rgba(0, 0, 0, 0.6);
-                        color: white;
-                        font-weight: bold;
-                        border-radius: 50%;
-                        width: 36px;
-                        height: 36px;
-                        cursor: pointer;
-                        font-size: 18px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        user-select: none;
-                        z-index: 20;
-                    ">
-                    {count}
-                </div>
-            </div>
-            """
-            st.markdown(overlay_html, unsafe_allow_html=True)
-
-            # 編集モード中は操作ボタン表示
             if st.session_state.edit_mode.get(item, False):
-                c1, c2, c3 = st.columns(3)
-                if c1.button("＋", key=f"plus_{item}"):
-                    st.session_state.fridge_items[item]["count"] += 1
-                    save_data(st.session_state.fridge_items)
-                    st.session_state.edit_mode[item] = False
-                    st.rerun()
-                if c2.button("−", key=f"minus_{item}"):
-                    st.session_state.fridge_items[item]["count"] = max(0, count - 1)
-                    save_data(st.session_state.fridge_items)
-                    st.session_state.edit_mode[item] = False
-                    st.rerun()
-                if c3.button("🗑️", key=f"delete_{item}"):
-                    del st.session_state.fridge_items[item]
-                    save_data(st.session_state.fridge_items)
-                    st.rerun()
+                with st.container():
+                    st.markdown(
+                        "<div style='border:1px solid #888; border-radius:8px; padding:8px; margin-top:6px;'>"
+                        , unsafe_allow_html=True)
+                    c1, c2, c3 = st.columns(3)
+                    if c1.button("＋", key=f"plus_{item}"):
+                        st.session_state.fridge_items[item]["count"] += 1
+                        save_data(st.session_state.fridge_items)
+                        st.session_state.edit_mode[item] = False
+                        st.rerun()
+                    if c2.button("−", key=f"minus_{item}"):
+                        st.session_state.fridge_items[item]["count"] = max(0, count - 1)
+                        save_data(st.session_state.fridge_items)
+                        st.session_state.edit_mode[item] = False
+                        st.rerun()
+                    if c3.button("🗑️", key=f"delete_{item}"):
+                        del st.session_state.fridge_items[item]
+                        save_data(st.session_state.fridge_items)
+                        st.rerun()
+                    st.markdown("</div>", unsafe_allow_html=True)
 
-# セッション初期化
-if "fridge_items" not in st.session_state:
-    st.session_state.fridge_items = load_data()
-
-if "edit_mode" not in st.session_state:
-    st.session_state.edit_mode = {}
-
-for item in st.session_state.fridge_items:
-    if item not in st.session_state.edit_mode:
-        st.session_state.edit_mode[item] = False
-
-# メイン表示
 st.markdown("<h2 style='font-size:20px;'>🧊 冷蔵庫在庫管理アプリ</h2>", unsafe_allow_html=True)
 display_items()
 
@@ -157,7 +118,6 @@ if add_col2.button("追加"):
         st.session_state.fridge_items[name] = {"count": 1, "image": image_file}
         st.session_state.edit_mode[name] = False
         save_data(st.session_state.fridge_items)
-        st.success(f"{name} を追加しました")
         st.rerun()
 
 st.markdown("---")
