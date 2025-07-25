@@ -28,11 +28,6 @@ def get_image_base64(image_path):
     with open(image_path, "rb") as f:
         return base64.b64encode(f.read()).decode()
 
-def toggle_edit(item):
-    for k in st.session_state.edit_mode.keys():
-        st.session_state.edit_mode[k] = False
-    st.session_state.edit_mode[item] = True
-
 if "fridge_items" not in st.session_state:
     st.session_state.fridge_items = load_data()
 
@@ -59,40 +54,65 @@ def display_items():
         col = cols[idx % 3]
 
         with col:
-            st.markdown(f"""
-            <div style="width:100px; margin:auto;">
-                <img src="data:image/png;base64,{image_base64}" 
-                    style="width:100px; height:100px; border-radius:8px; object-fit:cover;" />
-            </div>
-            """, unsafe_allow_html=True)
+            checkbox_id = f"checkbox_{item}"
+            # 非表示チェックボックス（見えないけどDOMには存在）
+            checked = st.checkbox("", key=checkbox_id, value=st.session_state.edit_mode.get(item, False), label_visibility="collapsed")
 
-            st.markdown(f"<div style='text-align:center; font-weight:bold; font-size:18px; margin-bottom:6px;'>{count} 個</div>", unsafe_allow_html=True)
-
-            if st.button("編集", key=f"edit_btn_{item}"):
-                toggle_edit(item)
+            # チェック状態がセッションと異なる場合は更新して再描画
+            if checked != st.session_state.edit_mode.get(item, False):
+                for k in st.session_state.edit_mode.keys():
+                    st.session_state.edit_mode[k] = False
+                st.session_state.edit_mode[item] = checked
                 st.rerun()
 
+            # 画像と数字のオーバーレイHTML（数字はクリックでチェックボックスを操作）
+            overlay_html = f"""
+            <div style="position: relative; width: 100px; height: 100px; margin: auto;">
+                <img src="data:image/png;base64,{image_base64}"
+                    style="width: 100px; height: 100px; border-radius: 8px; object-fit: cover;" />
+                <div onclick="document.getElementById('{checkbox_id}').click();"
+                    style="
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        background-color: rgba(0, 0, 0, 0.6);
+                        color: white;
+                        font-weight: bold;
+                        border-radius: 50%;
+                        width: 36px;
+                        height: 36px;
+                        cursor: pointer;
+                        font-size: 18px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        user-select: none;
+                        z-index: 20;
+                    ">
+                    {count}
+                </div>
+            </div>
+            """
+            st.markdown(overlay_html, unsafe_allow_html=True)
+
+            # 編集モード中の操作ボタン表示
             if st.session_state.edit_mode.get(item, False):
-                with st.container():
-                    st.markdown(
-                        "<div style='border:1px solid #888; border-radius:8px; padding:8px; margin-top:6px;'>"
-                        , unsafe_allow_html=True)
-                    c1, c2, c3 = st.columns(3)
-                    if c1.button("＋", key=f"plus_{item}"):
-                        st.session_state.fridge_items[item]["count"] += 1
-                        save_data(st.session_state.fridge_items)
-                        st.session_state.edit_mode[item] = False
-                        st.rerun()
-                    if c2.button("−", key=f"minus_{item}"):
-                        st.session_state.fridge_items[item]["count"] = max(0, count - 1)
-                        save_data(st.session_state.fridge_items)
-                        st.session_state.edit_mode[item] = False
-                        st.rerun()
-                    if c3.button("🗑️", key=f"delete_{item}"):
-                        del st.session_state.fridge_items[item]
-                        save_data(st.session_state.fridge_items)
-                        st.rerun()
-                    st.markdown("</div>", unsafe_allow_html=True)
+                c1, c2, c3 = st.columns(3)
+                if c1.button("＋", key=f"plus_{item}"):
+                    st.session_state.fridge_items[item]["count"] += 1
+                    save_data(st.session_state.fridge_items)
+                    st.session_state.edit_mode[item] = False
+                    st.rerun()
+                if c2.button("−", key=f"minus_{item}"):
+                    st.session_state.fridge_items[item]["count"] = max(0, count - 1)
+                    save_data(st.session_state.fridge_items)
+                    st.session_state.edit_mode[item] = False
+                    st.rerun()
+                if c3.button("🗑️", key=f"delete_{item}"):
+                    del st.session_state.fridge_items[item]
+                    save_data(st.session_state.fridge_items)
+                    st.rerun()
 
 st.markdown("<h2 style='font-size:20px;'>🧊 冷蔵庫在庫管理アプリ</h2>", unsafe_allow_html=True)
 display_items()
@@ -101,7 +121,7 @@ st.markdown("---")
 st.subheader("🥕 食材を追加")
 
 new_item = st.text_input("食材名を入力", key="new_item")
-add_col1, add_col2 = st.columns([2, 1])
+add_col1, add_col2 = st.columns([2,1])
 if add_col2.button("追加"):
     name = new_item.strip()
     if not name:
@@ -121,7 +141,6 @@ if add_col2.button("追加"):
         st.rerun()
 
 st.markdown("---")
-# レシピ提案
 def suggest_recipe(data):
     ingredients = data.keys()
     if "トマト" in ingredients and "卵" in ingredients:
@@ -136,7 +155,6 @@ def suggest_recipe(data):
 if st.button("🍳 おすすめレシピを表示"):
     st.info(suggest_recipe(st.session_state.fridge_items))
 
-# 楽天レシピAPI連携
 RAKUTEN_APP_ID = "1077657241734895268"
 
 def get_rakuten_recipes(ingredients):
