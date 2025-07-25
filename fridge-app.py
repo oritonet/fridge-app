@@ -54,15 +54,12 @@ def display_items():
         col = cols[idx % 3]
 
         with col:
-            checkbox_id = f"checkbox_{item}"
-            # 非表示チェックボックス（見えないけどDOMには存在）
-            checked = st.checkbox("", key=checkbox_id, value=st.session_state.edit_mode.get(item, False), label_visibility="collapsed")
-
-            # チェック状態がセッションと異なる場合は更新して再描画
-            if checked != st.session_state.edit_mode.get(item, False):
+            edit_btn_id = f"edit_btn_{item}"
+            if st.button("編集", key=edit_btn_id):
+                # すでに開いている編集モードをすべて閉じてから、このアイテムを開く
                 for k in st.session_state.edit_mode.keys():
                     st.session_state.edit_mode[k] = False
-                st.session_state.edit_mode[item] = checked
+                st.session_state.edit_mode[item] = True
                 st.rerun()
 
             # 画像と数字のオーバーレイHTML（数字はクリックでチェックボックスを操作）
