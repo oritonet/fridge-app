@@ -55,19 +55,15 @@ def display_items():
 
         with col:
             edit_btn_id = f"edit_btn_{item}"
-            if st.button("編集", key=edit_btn_id):
-                # すでに開いている編集モードをすべて閉じてから、このアイテムを開く
-                for k in st.session_state.edit_mode.keys():
-                    st.session_state.edit_mode[k] = False
-                st.session_state.edit_mode[item] = True
-                st.rerun()
-
-            # 画像と数字のオーバーレイHTML（数字はクリックでチェックボックスを操作）
             overlay_html = f"""
             <div style="position: relative; width: 100px; height: 100px; margin: auto;">
                 <img src="data:image/png;base64,{image_base64}"
                     style="width: 100px; height: 100px; border-radius: 8px; object-fit: cover;" />
-                <div onclick="document.getElementById('{checkbox_id}').click();"
+                <div onclick="document.getElementById('{edit_btn_id}').click();"
+                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                           cursor: pointer; background-color: rgba(0,0,0,0); z-index: 10;">
+                </div>
+                <button id="{edit_btn_id}"
                     style="
                         position: absolute;
                         top: 50%;
@@ -79,16 +75,14 @@ def display_items():
                         border-radius: 50%;
                         width: 36px;
                         height: 36px;
+                        border: none;
                         cursor: pointer;
                         font-size: 18px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
                         user-select: none;
                         z-index: 20;
                     ">
                     {count}
-                </div>
+                </button>
             </div>
             """
             st.markdown(overlay_html, unsafe_allow_html=True)
