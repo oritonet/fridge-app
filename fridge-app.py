@@ -71,13 +71,19 @@ def display_items():
     for item, info in st.session_state.fridge_items.items():
         image_path = os.path.join(IMAGE_DIR, info["image"])
         count = info["count"]
+        key_show = f"show_buttons_{item}"
+
+        if key_show not in st.session_state:
+            st.session_state[key_show] = False
 
         if os.path.exists(image_path):
             image_base64 = get_image_base64(image_path)
 
-            html = f"""
-            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                <div style="position: relative; width: 60px; height: 60px;">
+            # クリック可能な画像 + JSトリガー
+            img_click_html = f"""
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                <div onclick="fetch('/_click_image_{item}', {{method: 'POST'}})"
+                    style="position: relative; width: 60px; height: 60px; cursor: pointer;">
                     <img src="data:image/png;base64,{image_base64}"
                          style="width: 60px; height: 60px; border-radius: 8px; object-fit: contain;" />
                     <div style="
@@ -105,24 +111,52 @@ def display_items():
                 </div>
             </div>
             """
-            st.markdown(html, unsafe_allow_html=True)
 
-            col1, col2, col3 = st.columns([1,1,1])
+            # JavaScriptクリック→streamlitの値変更
+            js = f"""
+            <script>
+                const imgDiv = document.querySelectorAll("div[onclick]");
+                imgDiv.forEach(div => {{
+                    div.addEventListener("click", () => {{
+                        const event = new Event("input", {{ bubbles: true }});
+                        const input = window.parent.document.querySelector("input[name='toggle_{item}']");
+                        if (input) {{
+                            input.checked = !input.checked;
+                            input.dispatchEvent(event);
+                        }}
+                    }});
+                }});
+            </script>
+            """
+            # hidden input (トグルの代用)
+            st.markdown(f"""
+                <input type="checkbox" name="toggle_{item}" style="display:none"
+                    {'checked' if st.session_state[key_show] else ''}>
+            """, unsafe_allow_html=True)
+            # 画像クリックUI
+            st.markdown(img_click_html, unsafe_allow_html=True)
+            st.markdown(js, unsafe_allow_html=True)
 
-            if col1.button("＋", key=f"btn_add_{item}"):
-                st.session_state.fridge_items[item]["count"] += 1
-                save_data(st.session_state.fridge_items)
-                st.rerun()  # 押した瞬間に即再描画
+            # Python側でも toggle を管理
+            toggle = st.checkbox(f"", key=f"toggle_checkbox_{item}", label_visibility="collapsed", value=st.session_state[key_show])
+            st.session_state[key_show] = toggle
 
-            if col2.button("−", key=f"btn_sub_{item}"):
-                st.session_state.fridge_items[item]["count"] = max(0, count - 1)
-                save_data(st.session_state.fridge_items)
-                st.rerun()
-
-            if col3.button("🗑️", key=f"btn_del_{item}"):
-                del st.session_state.fridge_items[item]
-                save_data(st.session_state.fridge_items)
-                st.rerun()
+            if st.session_state[key_show]:
+                col1, col2, col3 = st.columns([1, 1, 1])
+                if col1.button("＋", key=f"btn_add_{item}"):
+                    st.session_state.fridge_items[item]["count"] += 1
+                    save_data(st.session_state.fridge_items)
+                    st.session_state[key_show] = False
+                    st.rerun()
+                if col2.button("−", key=f"btn_sub_{item}"):
+                    st.session_state.fridge_items[item]["count"] = max(0, count - 1)
+                    save_data(st.session_state.fridge_items)
+                    st.session_state[key_show] = False
+                    st.rerun()
+                if col3.button("🗑️", key=f"btn_del_{item}"):
+                    del st.session_state.fridge_items[item]
+                    save_data(st.session_state.fridge_items)
+                    st.rerun()
 
         else:
             st.text(f"{item}：画像なし, 個数: {count}")
