@@ -69,7 +69,7 @@ def display_items():
                     st.session_state.edit_mode[k] = False
                 # 対象だけON
                 st.session_state.edit_mode[item] = checked
-                st.experimental_rerun()
+                st.rerun()
 
             # 画像と数字のオーバーレイHTML
             overlay_html = f"""
