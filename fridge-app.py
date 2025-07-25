@@ -70,18 +70,18 @@ def display_items():
                 st.rerun()
 
         # ↓ 縦並び用のUIに変更
-if st.button("＋", key=f"add_{item}"):
-    st.session_state.fridge_items[item]["count"] += 1
-    save_data(st.session_state.fridge_items)
-    st.rerun()
-if st.button("－", key=f"sub_{item}"):
-    st.session_state.fridge_items[item]["count"] = max(0, st.session_state.fridge_items[item]["count"] - 1)
-    save_data(st.session_state.fridge_items)
-    st.rerun()
-if st.button("🗑️", key=f"del_{item}"):
-    del st.session_state.fridge_items[item]
-    save_data(st.session_state.fridge_items)
-    st.rerun()
+    if st.button("＋", key=f"add_{item}"):
+        st.session_state.fridge_items[item]["count"] += 1
+        save_data(st.session_state.fridge_items)
+        st.rerun()
+    if st.button("－", key=f"sub_{item}"):
+        st.session_state.fridge_items[item]["count"] = max(0, st.session_state.fridge_items[item]["count"] - 1)
+        save_data(st.session_state.fridge_items)
+        st.rerun()
+    if st.button("🗑️", key=f"del_{item}"):
+        del st.session_state.fridge_items[item]
+        save_data(st.session_state.fridge_items)
+        st.rerun()
 
 # セッション初期化
 if "fridge_items" not in st.session_state:
