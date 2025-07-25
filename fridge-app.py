@@ -4,7 +4,6 @@ import os
 from PIL import Image
 import base64
 import requests
-from io import BytesIO
 
 # 定数
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -30,10 +29,17 @@ def save_data(data):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-# base64で画像をエンコード
+# 画像をbase64に変換
 def get_image_base64(image_path):
     with open(image_path, "rb") as f:
         return base64.b64encode(f.read()).decode()
+
+# 安全に再実行（Streamlitのrerun）
+def safe_rerun():
+    try:
+        st.experimental_rerun()
+    except Exception:
+        pass
 
 def display_items():
     for item, info in st.session_state.fridge_items.items():
@@ -42,12 +48,12 @@ def display_items():
             image_base64 = get_image_base64(image_path)
             count = info["count"]
 
-            # 画像に個数を中央オーバーレイ表示するHTML
+            # 画像＋中央に個数オーバーレイ表示のHTML
             html = f"""
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
                 <div style="position: relative; width: 60px; height: 60px;">
-                    <img src="data:image/png;base64,{image_base64}" 
-                        style="width: 60px; height: 60px; border-radius: 8px; object-fit: contain;" />
+                    <img src="data:image/png;base64,{image_base64}"
+                         style="width: 60px; height: 60px; border-radius: 8px; object-fit: contain;" />
                     <div style="
                         position: absolute;
                         top: 50%;
@@ -71,36 +77,35 @@ def display_items():
                 <div style="flex-grow: 1;">
                     <h3 style="margin: 0 0 8px 0;">{item}</h3>
                     <div style="display: flex; gap: 6px;">
-                        <button id="btn_add_{item}" style="font-size: 18px; padding: 6px 12px;">＋</button>
-                        <button id="btn_sub_{item}" style="font-size: 18px; padding: 6px 12px;">－</button>
-                        <button id="btn_del_{item}" style="font-size: 18px; padding: 6px 12px;">🗑️</button>
+                        <!-- 実際の操作は下のStreamlitボタンで行うためHTMLボタンは装飾だけ -->
+                        <button style="font-size: 18px; padding: 6px 12px;">＋</button>
+                        <button style="font-size: 18px; padding: 6px 12px;">－</button>
+                        <button style="font-size: 18px; padding: 6px 12px;">🗑️</button>
                     </div>
                 </div>
             </div>
             """
 
-            # HTMLを表示（ボタンのクリックはJSで拾えないため無効）
             st.markdown(html, unsafe_allow_html=True)
 
-            # 代わりにStreamlitのボタンで操作させるため、透明なボタン配置
+            # Streamlitのボタンで操作（ここが本当の動作を担当）
             col1, col2, col3 = st.columns([1,1,1])
             with col1:
                 if st.button("＋", key=f"add_{item}"):
                     st.session_state.fridge_items[item]["count"] += 1
                     save_data(st.session_state.fridge_items)
-                    st.experimental_rerun()
+                    safe_rerun()
             with col2:
                 if st.button("−", key=f"sub_{item}"):
                     current_count = st.session_state.fridge_items[item]["count"]
                     st.session_state.fridge_items[item]["count"] = max(0, current_count - 1)
                     save_data(st.session_state.fridge_items)
-                    st.experimental_rerun()
+                    safe_rerun()
             with col3:
                 if st.button("🗑️", key=f"del_{item}"):
                     del st.session_state.fridge_items[item]
                     save_data(st.session_state.fridge_items)
-                    st.experimental_rerun()
-
+                    safe_rerun()
         else:
             st.text(f"{item}：画像なし, 個数: {info['count']}")
 
@@ -108,6 +113,7 @@ def display_items():
 if "fridge_items" not in st.session_state:
     st.session_state.fridge_items = load_data()
 
+# CSS調整（ボタンを大きく）
 st.markdown("""
     <style>
     .stButton > button {
@@ -123,7 +129,7 @@ st.markdown("""
 # タイトル
 st.markdown("<h2 style='font-size:20px;'>🧊 冷蔵庫在庫管理アプリ</h2>", unsafe_allow_html=True)
 
-# 表示
+# 在庫一覧表示
 display_items()
 
 # 新規追加セクション
@@ -148,7 +154,7 @@ if add_col2.button("追加"):
         st.session_state.fridge_items[name] = {"count": 1, "image": image_file}
         save_data(st.session_state.fridge_items)
         st.success(f"{name} を追加しました")
-        st.rerun()
+        safe_rerun()
 
 # レシピ表示
 st.markdown("---")
@@ -169,7 +175,6 @@ if st.button("🍳 おすすめレシピを表示"):
 RAKUTEN_APP_ID = "1077657241734895268"
 
 def get_rakuten_recipes(ingredients):
-    # 材料を最大5個、全角カンマ区切りで指定
     material_str = "、".join(list(ingredients)[:5])
     st.write(f"楽天レシピAPIに送信する材料パラメータ: {material_str}")
     url = "https://app.rakuten.co.jp/services/api/Recipe/RecipeMaterial/20170426"
@@ -182,7 +187,6 @@ def get_rakuten_recipes(ingredients):
         res = requests.get(url, params=params)
         res.raise_for_status()
         data = res.json()
-        # st.write("APIレスポンス", data)  # デバッグ用
         recipes = data.get("result", [])
         return recipes
     except Exception as e:
@@ -199,7 +203,7 @@ if st.button("楽天レシピで検索"):
     else:
         recipes = get_rakuten_recipes(ingredients)
         if recipes:
-            for recipe in recipes[:5]:  # 上位5件だけ表示
+            for recipe in recipes[:5]:
                 st.markdown(f"**{recipe['recipeTitle']}**  \n[レシピを見る]({recipe['recipeUrl']})")
         else:
             st.info("該当するレシピが見つかりませんでした。")
