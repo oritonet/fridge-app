@@ -112,17 +112,17 @@ def display_items():
             if col1.button("＋", key=f"btn_add_{item}"):
                 st.session_state.fridge_items[item]["count"] += 1
                 save_data(st.session_state.fridge_items)
-                st.experimental_rerun()  # 押した瞬間に即再描画
+                st.rerun()  # 押した瞬間に即再描画
 
             if col2.button("−", key=f"btn_sub_{item}"):
                 st.session_state.fridge_items[item]["count"] = max(0, count - 1)
                 save_data(st.session_state.fridge_items)
-                st.experimental_rerun()
+                st.rerun()
 
             if col3.button("🗑️", key=f"btn_del_{item}"):
                 del st.session_state.fridge_items[item]
                 save_data(st.session_state.fridge_items)
-                st.experimental_rerun()
+                st.rerun()
 
         else:
             st.text(f"{item}：画像なし, 個数: {count}")
