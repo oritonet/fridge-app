@@ -65,7 +65,7 @@ def display_items():
             st.markdown(f"""
             <div style="position: relative; width: 100px; height: 100px; margin: auto;">
                 <img src="data:image/png;base64,{image_base64}"
-                    style="width: 100px; height: 100px; border-radius: 8px; object-fit: cover;" />
+                    style="width: 100px; height: 120px; border-radius: 8px; object-fit: cover;" />
                 <div style="
                     position: absolute;
                     top: 50%;
