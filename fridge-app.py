@@ -61,10 +61,32 @@ def display_items():
         col = cols[idx % 3]
 
         with col:
-    
-
-
-
+    st.markdown(f"""
+    <div style="position: relative; width: 100px; height: 100px; margin: auto;">
+        <img src="data:image/png;base64,{image_base64}"
+            style="width: 100px; height: 100px; border-radius: 8px; object-fit: contain; background: #fff;" />
+        <div style="
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0,0,0,0.6);
+            color: white;
+            font-weight: bold;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            user-select: none;
+            pointer-events: none;
+        ">
+            {count}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
             # 編集ボタン（ラベル切替あり）
             label = "閉じる" if st.session_state.edit_mode.get(item, False) else "編集"
