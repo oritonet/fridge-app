@@ -63,7 +63,7 @@ def display_items():
         with col:
             # 画像表示
             st.markdown(f"""
-            <div style="position: relative; width: 50px; height: 50px; margin: auto;">
+            <div style="position: relative; width: 100px; height: 100px; margin: auto;">
                 <img src="data:image/png;base64,{image_base64}"
                     style="width: 50px; height: 40px; border-radius: 8px; object-fit: cover;" />
                 <div style="
